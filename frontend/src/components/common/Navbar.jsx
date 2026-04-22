@@ -8,6 +8,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   const getDashboardLink = () => {
@@ -34,7 +35,7 @@ const Navbar = () => {
             <Link to="/products" className="text-white hover:text-secondary transition">
               Products
             </Link>
-            
+
             {user ? (
               <>
                 <Link to={getDashboardLink()} className="text-white hover:text-secondary transition">
@@ -48,19 +49,41 @@ const Navbar = () => {
                     </span>
                   )}
                 </Link>
-                <div className="relative group">
-                  <button className="flex items-center space-x-2 text-white">
-                    <FaUser />
-                    <span>{user.fullName?.split(' ')[0]}</span>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center space-x-2 text-white hover:text-secondary transition focus:outline-none cursor-pointer"
+                  >
+                    <FaUser size={18} />
+                    <span className="text-sm font-medium">{user.fullName?.split(' ')[0]}</span>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg hidden group-hover:block">
-                    <button
-                      onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                    >
-                      Logout
-                    </button>
-                  </div>
+
+                  {isDropdownOpen && (
+                    <>
+                      {/* Backdrop for closing when clicking outside */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setIsDropdownOpen(false)}
+                      />
+
+                      {/* Dropdown menu */}
+                      <div className="absolute right-0 mt-3 w-56 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-20">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
+                          <p className="text-xs text-gray-500 mt-1">{user.email}</p>
+                        </div>
+                        <button
+                          onClick={logout}
+                          className="w-full text-left px-4 py-3 text-sm text-[#8B5E3C] hover:bg-[#E9EDC9] transition flex items-center space-x-2 cursor-pointer"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </>
             ) : (

@@ -16,10 +16,11 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
   const [itemCount, setItemCount] = useState(0);
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const loadCart = async () => {
-    if (!isAuthenticated) {
+    // Only load cart for customers
+    if (!isAuthenticated || user?.role !== 'customer') {
       setCart(null);
       setItemCount(0);
       return;
@@ -33,12 +34,21 @@ export const CartProvider = ({ children }) => {
       setItemCount(count);
     } catch (error) {
       console.error('Error loading cart:', error);
+      // Don't show error for non-customer roles
+      if (error.message?.includes('403')) {
+        // Silently fail for non-customers
+        setCart(null);
+        setItemCount(0);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const addItem = async (productId, quantity) => {
+    if (user?.role !== 'customer') {
+      throw new Error('Only customers can add items to cart');
+    }
     try {
       const data = await addToCart(productId, quantity);
       setCart(data.cart);
@@ -51,6 +61,9 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateItem = async (productId, quantity) => {
+    if (user?.role !== 'customer') {
+      throw new Error('Only customers can update cart');
+    }
     try {
       const data = await updateCartItem(productId, quantity);
       setCart(data.cart);
@@ -63,6 +76,9 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeItem = async (productId) => {
+    if (user?.role !== 'customer') {
+      throw new Error('Only customers can remove items from cart');
+    }
     try {
       const data = await removeFromCart(productId);
       setCart(data.cart);
@@ -76,7 +92,7 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     loadCart();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.role]);
 
   const value = {
     cart,

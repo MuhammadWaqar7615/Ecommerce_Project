@@ -18,7 +18,7 @@ app.use('/api/customer', require('./routes/customerRoutes'));
 app.use('/api/vendor', require('./routes/vendorRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/public', require('./routes/publicRoutes'));
-
+app.use('/api/password', require('./routes/passwordRoutes'));
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });

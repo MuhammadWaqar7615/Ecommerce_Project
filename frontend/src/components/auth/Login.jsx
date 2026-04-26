@@ -17,19 +17,35 @@ const Login = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login with:', identifier);
       const data = await login(identifier, password);
-      setUser(data.user);
+      console.log('Login response data:', data);
       
-      if (data.user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (data.user.role === 'vendor') {
-        navigate('/vendor/dashboard');
+      if (data && data.user) {
+        setUser(data.user);
+        console.log('User role:', data.user.role);
+        console.log('User approved status:', data.user.isVendorApproved);
+        
+        // Redirect based on role
+        if (data.user.role === 'admin') {
+          console.log('Redirecting to admin dashboard');
+          navigate('/admin/dashboard');
+        } else if (data.user.role === 'vendor') {
+          console.log('Redirecting to vendor dashboard');
+          navigate('/vendor/dashboard');
+        } else {
+          console.log('Redirecting to home');
+          navigate('/');
+        }
       } else {
-        navigate('/');
+        console.error('No user data in response');
+        setError('Login failed: No user data received');
+        setLoading(false);
       }
     } catch (err) {
-      setError(err.message);
-    } finally {
+      console.error('Login error caught:', err);
+      console.error('Error message:', err.message);
+      setError(err.message || 'Login failed. Please check your credentials.');
       setLoading(false);
     }
   };
@@ -95,6 +111,11 @@ const Login = () => {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+          </div>
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+              Forgot password?
+            </Link>
           </div>
         </form>
       </div>

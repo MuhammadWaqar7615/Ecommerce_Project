@@ -1,6 +1,18 @@
 import api from './api';
 import { handleResponse, handleError } from '../utils/apiResponse';
 
+// For public access (no authentication needed) - Use this for product listing
+export const getPublicProducts = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams(filters).toString();
+    const response = await api.get(`/public/search${params ? `?${params}` : ''}`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
+// For authenticated customer access (cart, etc.)
 export const getProducts = async (filters = {}) => {
   try {
     const params = new URLSearchParams(filters).toString();
@@ -11,9 +23,10 @@ export const getProducts = async (filters = {}) => {
   }
 };
 
+// Get single product - use public endpoint
 export const getProductById = async (id) => {
   try {
-    const response = await api.get(`/customer/products/${id}`);
+    const response = await api.get(`/public/search?productId=${id}`);
     return handleResponse(response);
   } catch (error) {
     throw new Error(handleError(error));

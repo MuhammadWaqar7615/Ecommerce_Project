@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import DashboardLayout from '../components/common/DashboardLayout';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/formatPrice';
 import { FaTrash } from 'react-icons/fa';
@@ -25,29 +26,33 @@ const Cart = () => {
   };
 
   const subtotal = calculateSubtotal();
-  const shippingFee = 200; // Will be calculated in checkout
+  const shippingFee = 200;
   const total = subtotal + shippingFee;
 
   if (loading) {
-    return <div className="text-center py-10">Loading cart...</div>;
+    return (
+      <DashboardLayout title="Shopping Cart" subtitle="Review your items">
+        <div className="text-center py-10">Loading cart...</div>
+      </DashboardLayout>
+    );
   }
 
   if (!cart?.items || cart.items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
-        <p className="text-gray-600 mb-8">Browse our products and add some items to your cart!</p>
-        <Link to="/products" className="btn-primary inline-block">
-          Continue Shopping
-        </Link>
-      </div>
+      <DashboardLayout title="Shopping Cart" subtitle="Your cart is empty">
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
+          <p className="text-gray-600 mb-8">Browse our products and add some items to your cart!</p>
+          <Link to="/products" className="btn-primary inline-block">
+            Continue Shopping
+          </Link>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Shopping Cart</h1>
-      
+    <DashboardLayout title="Shopping Cart" subtitle="Review and manage your items">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Cart Items */}
         <div className="lg:w-2/3">
@@ -138,7 +143,7 @@ const Cart = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

@@ -1,6 +1,7 @@
 import api from './api';
 import { handleResponse, handleError } from '../utils/apiResponse';
 
+// Shop Management
 export const getShop = async () => {
   try {
     const response = await api.get('/vendor/shop');
@@ -28,6 +29,7 @@ export const updateShop = async (shopData) => {
   }
 };
 
+// Product Management
 export const getVendorProducts = async () => {
   try {
     const response = await api.get('/vendor/products');
@@ -64,6 +66,7 @@ export const deleteProduct = async (id) => {
   }
 };
 
+// Order Management
 export const getVendorOrders = async () => {
   try {
     const response = await api.get('/vendor/orders');
@@ -82,6 +85,7 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 };
 
+// Revenue Analytics
 export const getRevenueAnalytics = async (period = 'month') => {
   try {
     const response = await api.get(`/vendor/revenue?period=${period}`);

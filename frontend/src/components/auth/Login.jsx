@@ -13,40 +13,56 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setError('');
     setLoading(true);
+
+    if (!identifier.trim()) {
+      setError('Please enter email or username');
+      setLoading(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      setError('Please enter your password');
+      setLoading(false);
+      return;
+    }
 
     try {
       console.log('Attempting login with:', identifier);
       const data = await login(identifier, password);
       console.log('Login response data:', data);
-      
+
       if (data && data.user) {
         setUser(data.user);
         console.log('User role:', data.user.role);
-        console.log('User approved status:', data.user.isVendorApproved);
-        
+
         // Redirect based on role
         if (data.user.role === 'admin') {
-          console.log('Redirecting to admin dashboard');
-          navigate('/admin/dashboard');
+          window.location.href = '/admin/dashboard';
         } else if (data.user.role === 'vendor') {
-          console.log('Redirecting to vendor dashboard');
-          navigate('/vendor/dashboard');
+          window.location.href = '/vendor/dashboard';
+        } else if (data.user.role === 'customer') {
+          window.location.href = '/customer/dashboard';  // ← Fixed: customers go to their dashboard
         } else {
-          console.log('Redirecting to home');
-          navigate('/');
+          window.location.href = '/';
         }
-      } else {
-        console.error('No user data in response');
-        setError('Login failed: No user data received');
-        setLoading(false);
       }
     } catch (err) {
       console.error('Login error caught:', err);
-      console.error('Error message:', err.message);
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Invalid email/username or password');
       setLoading(false);
+    }
+  };
+
+  // Reset error when user types
+  const handleInputChange = (e) => {
+    setError('');
+    if (e.target.name === 'identifier') {
+      setIdentifier(e.target.value);
+    } else {
+      setPassword(e.target.value);
     }
   };
 
@@ -64,12 +80,21 @@ const Login = () => {
             </Link>
           </p>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+              <span className="block sm:inline">{error}</span>
+              <button
+                type="button"
+                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+                onClick={() => setError('')}
+              >
+                <span className="text-xl">&times;</span>
+              </button>
             </div>
           )}
+
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="identifier" className="sr-only">
@@ -80,10 +105,10 @@ const Login = () => {
                 name="identifier"
                 type="text"
                 required
-                className="input-field rounded-t-md"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Email or Username"
                 value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
+                onChange={handleInputChange}
               />
             </div>
             <div>
@@ -95,10 +120,10 @@ const Login = () => {
                 name="password"
                 type="password"
                 required
-                className="input-field rounded-b-md"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -107,17 +132,38 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </span>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </div>
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-              Forgot password?
-            </Link>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link to="/forgot-password" className="font-medium text-primary hover:text-dark">
+                Forgot password?
+              </Link>
+            </div>
           </div>
         </form>
+
+        {/* Demo credentials helper */}
+        <div className="text-center text-xs text-gray-400 border-t pt-4">
+          <p>Demo Accounts:</p>
+          <p>Admin: admin@craftsdelights.com / admin123</p>
+          <p>Vendor: vendor@test.com / 123456</p>
+          <p>Customer: test@example.com / 123456</p>
+        </div>
       </div>
     </div>
   );

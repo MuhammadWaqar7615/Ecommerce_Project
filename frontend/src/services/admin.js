@@ -50,6 +50,15 @@ export const suspendUser = async (userId) => {
   }
 };
 
+export const deleteUser = async (userId) => {
+  try {
+    const response = await api.delete(`/admin/users/${userId}`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
 // Product Management
 export const getAllProducts = async (page = 1, limit = 20, isVisible = null) => {
   try {

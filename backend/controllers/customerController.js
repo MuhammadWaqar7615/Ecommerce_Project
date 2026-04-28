@@ -61,11 +61,11 @@ const getCart = async (req, res) => {
   try {
     let cart = await Cart.findOne({ customerId: req.user._id })
       .populate('items.productId');
-    
+
     if (!cart) {
       cart = await Cart.create({ customerId: req.user._id, items: [] });
     }
-    
+
     successResponse(res, { cart });
   } catch (error) {
     errorResponse(res, error.message);
@@ -76,25 +76,25 @@ const getCart = async (req, res) => {
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
-    
+
     const product = await Product.findById(productId);
     if (!product || !product.isVisible) {
       return errorResponse(res, 'Product not available', 404);
     }
-    
+
     if (product.stock < quantity) {
       return errorResponse(res, 'Insufficient stock', 400);
     }
-    
+
     let cart = await Cart.findOne({ customerId: req.user._id });
     if (!cart) {
       cart = await Cart.create({ customerId: req.user._id, items: [] });
     }
-    
+
     const existingItem = cart.items.find(
       item => item.productId.toString() === productId
     );
-    
+
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
@@ -104,7 +104,7 @@ const addToCart = async (req, res) => {
         priceAtAdd: product.price,
       });
     }
-    
+
     await cart.save();
     successResponse(res, { cart }, 'Item added to cart');
   } catch (error) {
@@ -116,16 +116,16 @@ const addToCart = async (req, res) => {
 const updateCartItem = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
-    
+
     const cart = await Cart.findOne({ customerId: req.user._id });
     if (!cart) return errorResponse(res, 'Cart not found', 404);
-    
+
     const item = cart.items.find(item => item.productId.toString() === productId);
     if (!item) return errorResponse(res, 'Item not in cart', 404);
-    
+
     item.quantity = quantity;
     await cart.save();
-    
+
     successResponse(res, { cart }, 'Cart updated');
   } catch (error) {
     errorResponse(res, error.message);
@@ -136,13 +136,13 @@ const updateCartItem = async (req, res) => {
 const removeFromCart = async (req, res) => {
   try {
     const { productId } = req.params;
-    
+
     const cart = await Cart.findOne({ customerId: req.user._id });
     if (!cart) return errorResponse(res, 'Cart not found', 404);
-    
+
     cart.items = cart.items.filter(item => item.productId.toString() !== productId);
     await cart.save();
-    
+
     successResponse(res, { cart }, 'Item removed');
   } catch (error) {
     errorResponse(res, error.message);
@@ -153,21 +153,21 @@ const removeFromCart = async (req, res) => {
 const createOrder = async (req, res) => {
   try {
     const { shippingAddress, shippingDistance = 5 } = req.body;
-    
+
     const cart = await Cart.findOne({ customerId: req.user._id }).populate('items.productId');
     if (!cart || cart.items.length === 0) {
       return errorResponse(res, 'Cart is empty', 400);
     }
-    
+
     let subtotal = 0;
     const orderItems = [];
-    
+
     for (const item of cart.items) {
       const product = item.productId;
       if (!product || !product.isVisible) {
         return errorResponse(res, `Product not available`, 400);
       }
-      
+
       subtotal += product.price * item.quantity;
       orderItems.push({
         productId: product._id,
@@ -175,16 +175,16 @@ const createOrder = async (req, res) => {
         quantity: item.quantity,
         price: product.price,
       });
-      
+
       // Reduce stock
       product.stock -= item.quantity;
       await product.save();
     }
-    
+
     const shippingFee = await calculateShippingFee(shippingDistance);
     const totalAmount = subtotal + shippingFee;
     const { adminCommission, vendorEarnings } = await calculateVendorEarnings(totalAmount);
-    
+
     const order = await Order.create({
       orderNumber: generateOrderNumber(),
       customerId: req.user._id,
@@ -198,11 +198,11 @@ const createOrder = async (req, res) => {
       status: 'Pending',
       paymentStatus: 'Pending',
     });
-    
+
     // Clear cart
     cart.items = [];
     await cart.save();
-    
+
     successResponse(res, { order }, 'Order created successfully', 201);
   } catch (error) {
     errorResponse(res, error.message);
@@ -215,10 +215,31 @@ const getOrders = async (req, res) => {
     const orders = await Order.find({ customerId: req.user._id })
       .populate('items.productId')
       .sort('-createdAt');
-    
+
     successResponse(res, { orders });
   } catch (error) {
     errorResponse(res, error.message);
+  }
+};
+
+// Get single order by ID
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      customerId: req.user._id
+    })
+      .populate('items.productId', 'name price images')
+      .populate('items.shopId', 'shopName');
+
+    if (!order) {
+      return errorResponse(res, 'Order not found', 404);
+    }
+
+    successResponse(res, { order });
+  } catch (error) {
+    console.error('Error in getOrderById:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 
@@ -226,7 +247,7 @@ const getOrders = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    
+
     if (!order) return errorResponse(res, 'Order not found', 404);
     if (order.customerId.toString() !== req.user._id.toString()) {
       return errorResponse(res, 'Unauthorized', 403);
@@ -234,18 +255,18 @@ const cancelOrder = async (req, res) => {
     if (order.status !== 'Pending') {
       return errorResponse(res, 'Order cannot be cancelled', 400);
     }
-    
+
     order.status = 'Cancelled';
     order.cancelledAt = new Date();
     await order.save();
-    
+
     // Restore stock
     for (const item of order.items) {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { stock: item.quantity }
       });
     }
-    
+
     successResponse(res, { order }, 'Order cancelled');
   } catch (error) {
     errorResponse(res, error.message);
@@ -256,17 +277,17 @@ const cancelOrder = async (req, res) => {
 const addReview = async (req, res) => {
   try {
     const { productId, rating, comment } = req.body;
-    
+
     const order = await Order.findOne({
       customerId: req.user._id,
       'items.productId': productId,
       status: 'Delivered',
     });
-    
+
     if (!order) {
       return errorResponse(res, 'You can only review purchased products', 400);
     }
-    
+
     const review = await Review.create({
       productId,
       customerId: req.user._id,
@@ -274,7 +295,7 @@ const addReview = async (req, res) => {
       rating,
       comment,
     });
-    
+
     // Update product rating
     const reviews = await Review.find({ productId });
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
@@ -282,7 +303,7 @@ const addReview = async (req, res) => {
       averageRating: avgRating,
       totalReviews: reviews.length,
     });
-    
+
     successResponse(res, { review }, 'Review added', 201);
   } catch (error) {
     errorResponse(res, error.message);
@@ -298,6 +319,7 @@ module.exports = {
   removeFromCart,
   createOrder,
   getOrders,
+  getOrderById,
   cancelOrder,
   addReview,
 };

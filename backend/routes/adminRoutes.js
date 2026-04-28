@@ -8,6 +8,7 @@ const {
   suspendVendor,
   getAllUsers,
   suspendUser,
+  deleteUser,
   getAllProducts,
   toggleProductVisibility,
   getAllOrders,
@@ -27,6 +28,7 @@ router.put('/vendors/:id/suspend', suspendVendor);
 // User Management
 router.get('/users', getAllUsers);
 router.put('/users/:id/suspend', suspendUser);
+router.delete('/users/:id', deleteUser);
 
 // Product Management
 router.get('/products', getAllProducts);

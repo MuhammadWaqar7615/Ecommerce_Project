@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import Loader from '../components/common/Loader';
+import Loader from '../components/common/AnimatedLoader';
 import { getProductById } from '../services/product';
 import { formatPrice } from '../utils/formatPrice';
 

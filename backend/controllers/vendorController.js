@@ -11,14 +11,14 @@ const createShop = async (req, res) => {
     if (existingShop) {
       return errorResponse(res, 'You already have a shop', 400);
     }
-    
+
     const shop = await Shop.create({
       vendorId: req.user._id,
       ...req.body,
     });
-    
+
     await User.findByIdAndUpdate(req.user._id, { shopId: shop._id });
-    
+
     successResponse(res, { shop }, 'Shop created', 201);
   } catch (error) {
     errorResponse(res, error.message);
@@ -56,7 +56,7 @@ const getProducts = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
     if (!shop) return errorResponse(res, 'Shop not found', 404);
-    
+
     const products = await Product.find({ shopId: shop._id });
     successResponse(res, { products });
   } catch (error) {
@@ -69,12 +69,12 @@ const addProduct = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
     if (!shop) return errorResponse(res, 'Create shop first', 400);
-    
+
     const product = await Product.create({
       ...req.body,
       shopId: shop._id,
     });
-    
+
     successResponse(res, { product }, 'Product added', 201);
   } catch (error) {
     errorResponse(res, error.message);
@@ -97,7 +97,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// Delete product
+// Delete product (soft delete - hide)
 const deleteProduct = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
@@ -113,17 +113,33 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// Get vendor orders
+// Get vendor orders (only orders containing vendor's products)
 const getOrders = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
+
+    // If no shop exists, return empty orders array
+    if (!shop) {
+      return successResponse(res, { orders: [] });
+    }
+
     const orders = await Order.find({ 'items.shopId': shop._id })
-      .populate('customerId', 'fullName email')
+      .populate('customerId', 'fullName email phone')
+      .populate('items.productId', 'name price images')
       .sort('-createdAt');
-    
-    successResponse(res, { orders });
+
+    // Filter to show only items belonging to this vendor
+    const filteredOrders = orders.map(order => ({
+      ...order.toObject(),
+      items: order.items.filter(item => 
+        item.shopId && item.shopId.toString() === shop._id.toString()
+      )
+    }));
+
+    successResponse(res, { orders: filteredOrders });
   } catch (error) {
-    errorResponse(res, error.message);
+    console.error('Error in getOrders:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 
@@ -132,16 +148,27 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findById(req.params.id);
-    
+
     if (!order) return errorResponse(res, 'Order not found', 404);
-    
+
+    // Verify this order contains vendor's products
+    const shop = await Shop.findOne({ vendorId: req.user._id });
+    const hasVendorProducts = order.items.some(
+      item => item.shopId && item.shopId.toString() === shop._id.toString()
+    );
+
+    if (!hasVendorProducts) {
+      return errorResponse(res, 'Unauthorized: This order does not contain your products', 403);
+    }
+
     order.status = status;
     if (status === 'Delivered') order.deliveredAt = new Date();
     await order.save();
-    
+
     successResponse(res, { order }, 'Status updated');
   } catch (error) {
-    errorResponse(res, error.message);
+    console.error('Error in updateOrderStatus:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 
@@ -149,27 +176,56 @@ const updateOrderStatus = async (req, res) => {
 const getRevenueAnalytics = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
+
+    // If no shop exists, return zeros
+    if (!shop) {
+      return successResponse(res, {
+        totalEarnings: 0,
+        totalOrders: 0,
+        averageOrderValue: 0,
+        earningsByProduct: [],
+        monthlyBreakdown: []
+      });
+    }
+
     const orders = await Order.find({
       'items.shopId': shop._id,
       paymentStatus: 'Paid',
     });
-    
+
     let totalEarnings = 0;
+    const earningsByProduct = {};
+
     orders.forEach(order => {
       order.items.forEach(item => {
-        if (item.shopId.toString() === shop._id.toString()) {
-          totalEarnings += item.price * item.quantity;
+        if (item.shopId && item.shopId.toString() === shop._id.toString()) {
+          const productEarnings = item.price * item.quantity;
+          totalEarnings += productEarnings;
+
+          const productId = item.productId.toString();
+          if (!earningsByProduct[productId]) {
+            earningsByProduct[productId] = {
+              productId,
+              productName: item.productId?.name || 'Unknown',
+              quantity: 0,
+              earnings: 0
+            };
+          }
+          earningsByProduct[productId].quantity += item.quantity;
+          earningsByProduct[productId].earnings += productEarnings;
         }
       });
     });
-    
+
     successResponse(res, {
       totalEarnings,
       totalOrders: orders.length,
       averageOrderValue: orders.length ? totalEarnings / orders.length : 0,
+      earningsByProduct: Object.values(earningsByProduct)
     });
   } catch (error) {
-    errorResponse(res, error.message);
+    console.error('Error in getRevenueAnalytics:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 

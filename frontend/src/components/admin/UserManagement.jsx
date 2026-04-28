@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserCheck, UserX } from 'lucide-react';
-import { getAllUsers, suspendUser } from '../../services/admin';
+import { Search, UserCheck, UserX, Trash2 } from 'lucide-react';
+import { getAllUsers, suspendUser, deleteUser } from '../../services/admin';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -27,6 +27,17 @@ const UserManagement = () => {
     if (!confirm(`Are you sure you want to ${currentStatus ? 'suspend' : 'activate'} this user?`)) return;
     try {
       await suspendUser(userId);
+      await fetchUsers();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleDelete = async (userId, userName) => {
+    if (!confirm(`⚠️ Are you sure you want to permanently delete "${userName}"? This action cannot be undone!`)) return;
+    try {
+      await deleteUser(userId);
+      alert(`✅ User "${userName}" has been deleted successfully.`);
       await fetchUsers();
     } catch (error) {
       alert(error.message);
@@ -76,7 +87,7 @@ const UserManagement = () => {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -103,19 +114,30 @@ const UserManagement = () => {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  {user.role !== 'admin' && (
-                    <button
-                      onClick={() => handleSuspend(user._id, user.isActive)}
-                      className={`flex items-center gap-1 px-3 py-1 rounded text-sm ${
-                        user.isActive 
-                          ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                          : 'bg-green-100 text-green-600 hover:bg-green-200'
-                      }`}
-                    >
-                      {user.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
-                      {user.isActive ? 'Suspend' : 'Activate'}
-                    </button>
-                  )}
+                  <div className="flex gap-2">
+                    {user.role !== 'admin' && (
+                      <>
+                        <button
+                          onClick={() => handleSuspend(user._id, user.isActive)}
+                          className={`flex items-center gap-1 px-3 py-1 rounded text-sm ${
+                            user.isActive 
+                              ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                              : 'bg-green-100 text-green-600 hover:bg-green-200'
+                          }`}
+                        >
+                          {user.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
+                          {user.isActive ? 'Suspend' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user._id, user.fullName)}
+                          className="flex items-center gap-1 px-3 py-1 rounded text-sm bg-red-100 text-red-600 hover:bg-red-200"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

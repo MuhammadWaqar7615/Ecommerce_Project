@@ -11,6 +11,7 @@ const {
   removeFromCart,
   createOrder,
   getOrders,
+  getOrderById,
   cancelOrder,
   addReview,
 } = require('../controllers/customerController');
@@ -26,6 +27,7 @@ router.put('/cart/update', updateCartItem);
 router.delete('/cart/remove/:productId', removeFromCart);
 router.post('/orders', createOrder);
 router.get('/orders', getOrders);
+router.get('/orders/:id', getOrderById);
 router.post('/orders/:id/cancel', cancelOrder);
 router.post('/reviews', addReview);
 

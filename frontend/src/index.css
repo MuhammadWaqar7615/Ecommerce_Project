@@ -49,3 +49,44 @@
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+/* Subtle Pulse Animation for Loader */
+@keyframes pulse-subtle {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+/* Smooth sidebar transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Prevent text wrapping during animation */
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+/* Better active state indicators */
+.bg-primary {
+  background-color: #8B5E3C;
+}
+
+.hover\:bg-primary\/10:hover {
+  background-color: rgba(139, 94, 60, 0.1);
+}

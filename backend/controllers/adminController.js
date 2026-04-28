@@ -101,6 +101,29 @@ const suspendUser = async (req, res) => {
   }
 };
 
+// Delete user (admin only)
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return errorResponse(res, 'User not found', 404);
+    }
+
+    // Prevent deleting admin users
+    if (user.role === 'admin') {
+      return errorResponse(res, 'Cannot delete admin user', 403);
+    }
+
+    await User.findByIdAndDelete(id);
+
+    successResponse(res, null, 'User deleted successfully');
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
+
 // ==================== PRODUCT MANAGEMENT ====================
 
 // Get all products with pagination
@@ -149,7 +172,7 @@ const toggleProductVisibility = async (req, res) => {
 
 // ==================== ORDER MANAGEMENT ====================
 
-// Get all orders with pagination
+// Get all orders with pagination and optional status filter
 const getAllOrders = async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
@@ -158,21 +181,42 @@ const getAllOrders = async (req, res) => {
     if (status && status !== '') query.status = status;
 
     const orders = await Order.find(query)
-      .populate('customerId', 'fullName email')
-      .populate('items.productId')
+      .populate('customerId', 'fullName email phone')
+      .populate({
+        path: 'items.productId',
+        select: 'name price images'
+      })
+      .populate({
+        path: 'items.shopId',
+        populate: {
+          path: 'vendorId',
+          select: 'fullName email shopName'
+        }
+      })
       .sort('-createdAt')
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
     const total = await Order.countDocuments(query);
 
+    // Format orders to include vendor/shop information
+    const formattedOrders = orders.map(order => ({
+      ...order.toObject(),
+      items: order.items.map(item => ({
+        ...item.toObject(),
+        vendorName: item.shopId?.vendorId?.fullName || 'Unknown Vendor',
+        shopName: item.shopId?.shopName || 'Unknown Shop'
+      }))
+    }));
+
     successResponse(res, {
-      orders,
+      orders: formattedOrders,
       totalPages: Math.ceil(total / limit),
       currentPage: parseInt(page),
       total,
     });
   } catch (error) {
+    console.error('Error in getAllOrders:', error);
     errorResponse(res, error.message, 500);
   }
 };
@@ -208,21 +252,21 @@ const getSystemStats = async (req, res) => {
 
     successResponse(res, {
       totalUsers,
-      users: { 
-        customers: totalCustomers, 
-        vendors: { 
-          total: totalVendors, 
-          approved: approvedVendors, 
-          pending: pendingVendors 
-        } 
+      users: {
+        customers: totalCustomers,
+        vendors: {
+          total: totalVendors,
+          approved: approvedVendors,
+          pending: pendingVendors
+        }
       },
       totalProducts,
       products: { active: activeProducts },
       totalOrders,
-      orders: { 
-        pending: pendingOrders, 
-        completed: completedOrders, 
-        cancelled: cancelledOrders 
+      orders: {
+        pending: pendingOrders,
+        completed: completedOrders,
+        cancelled: cancelledOrders
       },
       totalRevenue,
       totalSales,
@@ -273,21 +317,22 @@ module.exports = {
   getPendingVendors,
   approveVendor,
   suspendVendor,
-  
+
   // User Management
   getAllUsers,
   suspendUser,
-  
+  deleteUser,
+
   // Product Management
   getAllProducts,
   toggleProductVisibility,
-  
+
   // Order Management
   getAllOrders,
-  
+
   // Statistics
   getSystemStats,
-  
+
   // Settings
   getSettings,
   updateSetting,

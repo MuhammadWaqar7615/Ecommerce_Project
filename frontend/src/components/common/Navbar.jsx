@@ -38,8 +38,8 @@ const Navbar = () => {
     };
   }, []);
 
-  // Don't show Products button for admin
-  const showProductsButton = user?.role !== 'admin';
+  // Don't show Products button for admin OR vendor (only show for customers and visitors)
+  const showProductsButton = !user || (user.role !== 'admin' && user.role !== 'vendor');
 
   const handleLogout = () => {
     logout();
@@ -72,7 +72,7 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-6 items-center">
-            {/* Only show Products button if not admin */}
+            {/* Only show Products button for customers and visitors */}
             {showProductsButton && (
               <Link to="/products" className="text-white hover:text-secondary transition">
                 Products
@@ -163,7 +163,7 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden pb-4 space-y-3">
-            {/* Only show Products button if not admin */}
+            {/* Only show Products button for customers and visitors */}
             {showProductsButton && (
               <Link to="/products" className="block text-white py-2">Products</Link>
             )}

@@ -16,11 +16,26 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import VendorDashboard from './pages/VendorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ForgotPassword from './components/auth/ForgotPassword';
+import CustomerOrders from './pages/CustomerOrders';
+import CustomerProfile from './pages/CustomerProfile';
+import { LoadingProvider } from './context/LoadingContext';
+
+// Import Admin Components
+import PendingVendors from './components/admin/PendingVendors';
+import UserManagement from './components/admin/UserManagement';
+import ProductModeration from './components/admin/ProductModeration';
+import OrderManagement from './components/admin/AdminOrderManagement';
+import SystemSettings from './components/admin/SystemSettings';
+import AnalyticsDashboard from './components/admin/AnalyticsDashboard';
+import VendorOverview from './components/vendor/VendorOverview';
+import ShopManagement from './components/vendor/ShopManagement';
+import ProductManagement from './components/vendor/ProductManagement';
+import OrderManagementVendor from './components/vendor/OrderManagementVendor';
+import RevenueAnalytics from './components/vendor/RevenueAnalytics';
+import CustomerOrderDetail from './pages/CustomerOrderDetail';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
-
-  console.log('ProtectedRoute check:', { user, isAuthenticated, loading, allowedRoles });
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -37,10 +52,41 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+// Admin Layout wrapper
+const AdminLayout = () => {
+  return (
+    <AdminDashboard>
+      <Routes>
+        <Route path="/" element={<AnalyticsDashboard />} />
+        <Route path="/pending-vendors" element={<PendingVendors />} />
+        <Route path="/users" element={<UserManagement />} />
+        <Route path="/products" element={<ProductModeration />} />
+        <Route path="/orders" element={<OrderManagement />} />
+        <Route path="/settings" element={<SystemSettings />} />
+      </Routes>
+    </AdminDashboard>
+  );
+};
+
+// Vendor Layout wrapper (add this after AdminLayout)
+const VendorLayout = () => {
+  return (
+    <VendorDashboard>
+      <Routes>
+        <Route path="/" element={<VendorOverview />} />
+        <Route path="/shop" element={<ShopManagement />} />
+        <Route path="/products" element={<ProductManagement />} />
+        <Route path="/orders" element={<OrderManagementVendor />} />
+        <Route path="/revenue" element={<RevenueAnalytics />} />
+      </Routes>
+    </VendorDashboard>
+  );
+};
+
 function AppContent() {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <main className="min-h-screen">
         <Routes>
           {/* Public Routes */}
@@ -67,29 +113,38 @@ function AppContent() {
               <CustomerDashboard />
             </ProtectedRoute>
           } />
+          <Route path="/customer/orders" element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerOrders />
+            </ProtectedRoute>
+          } />
+          <Route path="/customer/orders/:id" element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerOrderDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/customer/profile" element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProfile />
+            </ProtectedRoute>
+          } />
 
           {/* Vendor Routes */}
-          <Route path="/vendor/dashboard" element={
+          <Route path="/vendor/*" element={
             <ProtectedRoute allowedRoles={['vendor']}>
-              <VendorDashboard />
+              <VendorLayout />
             </ProtectedRoute>
           } />
 
-          {/* Admin Routes */}
-          <Route path="/admin/dashboard" element={
+          {/* Admin Routes - Nested */}
+          <Route path="/admin/*" element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/admin/dashboard" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
+              <AdminLayout />
             </ProtectedRoute>
           } />
         </Routes>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }
@@ -98,7 +153,9 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AppContent />
+        <LoadingProvider>
+          <AppContent />
+        </LoadingProvider>
       </CartProvider>
     </AuthProvider>
   );

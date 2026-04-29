@@ -1,12 +1,23 @@
 const Product = require('../models/Product');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
-const { PRODUCT_CATEGORIES } = require('../config/constants');
 
-// Get categories
+// Get dynamic categories from existing products
 const getCategories = async (req, res) => {
   try {
-    successResponse(res, { categories: PRODUCT_CATEGORIES });
+    // Get distinct categories from ALL products
+    const categories = await Product.distinct('category');
+    
+    // Filter out empty, null, or undefined categories
+    const validCategories = categories.filter(cat => cat && cat.trim().length > 0);
+    
+    // Sort alphabetically
+    validCategories.sort();
+    
+    console.log('Dynamic categories from DB:', validCategories);
+    
+    successResponse(res, { categories: validCategories });
   } catch (error) {
+    console.error('Error fetching categories:', error);
     errorResponse(res, error.message, 500);
   }
 };

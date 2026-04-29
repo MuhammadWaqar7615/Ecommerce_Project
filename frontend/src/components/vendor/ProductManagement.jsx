@@ -1,7 +1,8 @@
+// frontend/src/components/vendor/ProductManagement.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Eye, EyeOff, Package } from 'lucide-react';
 import { getVendorProducts, addProduct, updateProduct, deleteProduct } from '../../services/vendor';
-import { getCategories } from '../../services/product';
 import { formatPrice } from '../../utils/formatPrice';
 
 const ProductManagement = () => {
@@ -10,6 +11,8 @@ const ProductManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showNewCategory, setShowNewCategory] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -21,7 +24,7 @@ const ProductManagement = () => {
 
   useEffect(() => {
     fetchProducts();
-    loadCategories();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
@@ -35,12 +38,20 @@ const ProductManagement = () => {
     }
   };
 
-  const loadCategories = async () => {
+  const fetchCategories = async () => {
     try {
-      const data = await getCategories();
-      setCategories(data.categories || []);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/vendor/categories', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const result = await response.json();
+      if (result.success) {
+        setCategories(result.data.categories || []);
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -64,14 +75,21 @@ const ProductManagement = () => {
         await addProduct(productData);
         alert('Product added successfully!');
       }
-      
+
       setShowModal(false);
-      setEditingProduct(null);
-      setFormData({ name: '', description: '', category: '', price: '', stock: '', images: [] });
+      resetForm();
       await fetchProducts();
+      await fetchCategories();
     } catch (error) {
       alert(error.message);
     }
+  };
+
+  const resetForm = () => {
+    setEditingProduct(null);
+    setFormData({ name: '', description: '', category: '', price: '', stock: '', images: [] });
+    setNewCategoryName('');
+    setShowNewCategory(false);
   };
 
   const handleEdit = (product) => {
@@ -79,7 +97,7 @@ const ProductManagement = () => {
     setFormData({
       name: product.name,
       description: product.description,
-      category: product.category,
+      category: product.category?._id || product.category,
       price: product.price,
       stock: product.stock,
       images: product.images || [],
@@ -87,11 +105,26 @@ const ProductManagement = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (productId) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+  const handleToggleVisibility = async (product) => {
+    const action = product.isVisible ? 'hide' : 'show';
+    if (confirm(`Are you sure you want to ${action} this product?`)) {
+      try {
+        await updateProduct(product._id, { isVisible: !product.isVisible });
+        alert(`Product ${action}n successfully!`);
+        await fetchProducts();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+  };
+
+  console.log('Products:', products);
+
+  const handleDelete = async (productId, productName) => {
+    if (confirm(`Are you sure you want to PERMANENTLY DELETE "${productName}"? This action cannot be undone!`)) {
       try {
         await deleteProduct(productId);
-        alert('Product deleted successfully!');
+        alert('Product deleted permanently!');
         await fetchProducts();
       } catch (error) {
         alert(error.message);
@@ -123,24 +156,26 @@ const ProductManagement = () => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {products.map((product) => (
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium">{product.name}</p>
-                      <p className="text-xs text-gray-500">{product.description?.substring(0, 50)}...</p>
-                    </div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-xs text-gray-500">{product.description?.substring(0, 50)}</p>
                   </td>
-                  <td className="px-4 py-3">{product.category}</td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 bg-gray-100 rounded-full text-xs">
+                      {product.category?.name || product.category || 'Uncategorized'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">{formatPrice(product.price)}</td>
                   <td className="px-4 py-3">
                     <span className={product.stock <= 10 ? 'text-red-500 font-semibold' : ''}>
@@ -154,16 +189,13 @@ const ProductManagement = () => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
+                      <button onClick={() => handleEdit(product)} className="text-blue-500 hover:text-blue-700" title="Edit">
                         <Edit size={18} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(product._id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
+                      <button onClick={() => handleToggleVisibility(product)} className="text-yellow-500 hover:text-yellow-700" title={product.isVisible ? 'Hide' : 'Show'}>
+                        {product.isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                      <button onClick={() => handleDelete(product._id, product.name)} className="text-red-500 hover:text-red-700" title="Delete Permanently">
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -178,7 +210,7 @@ const ProductManagement = () => {
       {/* Add/Edit Product Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-screen overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </h3>
@@ -192,8 +224,10 @@ const ProductManagement = () => {
                   className="input-field"
                   value={formData.name}
                   onChange={handleChange}
+                  placeholder="Enter product name"
                 />
               </div>
+
               <div className="mb-3">
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <textarea
@@ -202,23 +236,74 @@ const ProductManagement = () => {
                   className="input-field"
                   value={formData.description}
                   onChange={handleChange}
+                  placeholder="Describe your product..."
                 />
               </div>
+
               <div className="mb-3">
                 <label className="block text-sm font-medium mb-1">Category *</label>
-                <select
-                  name="category"
-                  required
-                  className="input-field"
-                  value={formData.category}
-                  onChange={handleChange}
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                {!showNewCategory ? (
+                  <div className="flex gap-2">
+                    <select
+                      name="category"
+                      required
+                      className="input-field flex-1"
+                      value={formData.category}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewCategory(true)}
+                      className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 whitespace-nowrap"
+                    >
+                      + New
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="New category name"
+                      className="input-field flex-1"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newCategoryName.trim()) {
+                          setFormData({ ...formData, category: newCategoryName.trim() });
+                          setShowNewCategory(false);
+                          setNewCategoryName('');
+                        }
+                      }}
+                      className="px-3 py-2 bg-primary text-white rounded-lg"
+                    >
+                      Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewCategory(false);
+                        setNewCategoryName('');
+                      }}
+                      className="px-3 py-2 bg-gray-100 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  {showNewCategory ? 'New category will be available to all vendors' : 'Select existing or click "New" to create'}
+                </p>
               </div>
+
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Price (PKR) *</label>
@@ -227,10 +312,10 @@ const ProductManagement = () => {
                     name="price"
                     required
                     min="0"
-                    step="1"
                     className="input-field"
                     value={formData.price}
                     onChange={handleChange}
+                    placeholder="0"
                   />
                 </div>
                 <div>
@@ -243,9 +328,11 @@ const ProductManagement = () => {
                     className="input-field"
                     value={formData.stock}
                     onChange={handleChange}
+                    placeholder="0"
                   />
                 </div>
               </div>
+
               <div className="flex gap-3">
                 <button type="submit" className="btn-primary flex-1">
                   {editingProduct ? 'Update' : 'Add'} Product
@@ -253,9 +340,8 @@ const ProductManagement = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    resetForm();
                     setShowModal(false);
-                    setEditingProduct(null);
-                    setFormData({ name: '', description: '', category: '', price: '', stock: '', images: [] });
                   }}
                   className="btn-outline flex-1"
                 >

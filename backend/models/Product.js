@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Category = require('./Category');  // ← ADD THIS LINE
 
 const productSchema = new mongoose.Schema({
   shopId: {
@@ -10,25 +11,31 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Product name is required'],
     trim: true,
+    minlength: [3, 'Product name must be at least 3 characters'],
   },
-  description: String,
-  category: {
+  description: {
     type: String,
-    required: true,
-    enum: ['Food', 'Crafts', 'Sandals', 'Home Decor', 'Other'],
+    maxlength: [2000, 'Description cannot exceed 2000 characters'],
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',  // Now Category is defined
+    required: [true, 'Category is required'],
   },
   price: {
     type: Number,
-    required: true,
-    min: 0,
+    required: [true, 'Price is required'],
+    min: [0, 'Price cannot be negative'],
   },
   stock: {
     type: Number,
     required: true,
+    min: [0, 'Stock cannot be negative'],
     default: 0,
-    min: 0,
   },
-  images: [String],
+  images: [{
+    type: String,
+  }],
   isVisible: {
     type: Boolean,
     default: true,
@@ -36,6 +43,8 @@ const productSchema = new mongoose.Schema({
   averageRating: {
     type: Number,
     default: 0,
+    min: 0,
+    max: 5,
   },
   totalReviews: {
     type: Number,
@@ -45,7 +54,7 @@ const productSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Text index for search
+// Text index for search functionality
 productSchema.index({ name: 'text', description: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

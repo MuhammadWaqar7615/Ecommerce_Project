@@ -2,6 +2,7 @@ const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const Category = require('../models/Category');  // ← ADD THIS IMPORT
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 // Create shop
@@ -57,7 +58,7 @@ const getProducts = async (req, res) => {
     const shop = await Shop.findOne({ vendorId: req.user._id });
     if (!shop) return errorResponse(res, 'Shop not found', 404);
 
-    const products = await Product.find({ shopId: shop._id });
+    const products = await Product.find({ shopId: shop._id }).populate('category', 'name');
     successResponse(res, { products });
   } catch (error) {
     errorResponse(res, error.message);
@@ -68,16 +69,36 @@ const getProducts = async (req, res) => {
 const addProduct = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
-    if (!shop) return errorResponse(res, 'Create shop first', 400);
+    if (!shop) {
+      return errorResponse(res, 'Create shop first', 400);
+    }
+
+    let { name, description, category, price, stock, images } = req.body;
+
+    // If category is a string (new category), create it first
+    if (typeof category === 'string' && !category.match(/^[0-9a-fA-F]{24}$/)) {
+      // It's a new category name, not an ObjectId
+      let existingCategory = await Category.findOne({ name: category.trim() });
+      if (!existingCategory) {
+        existingCategory = await Category.create({ name: category.trim() });
+      }
+      category = existingCategory._id;
+    }
 
     const product = await Product.create({
-      ...req.body,
       shopId: shop._id,
+      name,
+      description,
+      category,
+      price: parseFloat(price),
+      stock: parseInt(stock),
+      images: images || [],
     });
 
-    successResponse(res, { product }, 'Product added', 201);
+    successResponse(res, { product }, 'Product added successfully', 201);
   } catch (error) {
-    errorResponse(res, error.message);
+    console.error('Add product error:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 
@@ -85,20 +106,40 @@ const addProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
-    const product = await Product.findOneAndUpdate(
-      { _id: req.params.id, shopId: shop._id },
-      req.body,
-      { new: true }
-    );
-    if (!product) return errorResponse(res, 'Product not found', 404);
-    successResponse(res, { product }, 'Product updated');
+    const product = await Product.findOne({ _id: req.params.id, shopId: shop._id });
+
+    if (!product) {
+      return errorResponse(res, 'Product not found', 404);
+    }
+
+    const { name, description, category, price, stock, images } = req.body;
+
+    // If category is changing, create it if doesn't exist
+    if (category && category !== product.category) {
+      const existingCategory = await Category.findOne({ name: category.trim() });
+      if (!existingCategory) {
+        await Category.create({ name: category.trim() });
+      }
+    }
+
+    product.name = name || product.name;
+    product.description = description !== undefined ? description : product.description;
+    product.category = category || product.category;
+    product.price = price !== undefined ? price : product.price;
+    product.stock = stock !== undefined ? stock : product.stock;
+    product.images = images || product.images;
+
+    await product.save();
+
+    successResponse(res, { product }, 'Product updated successfully');
   } catch (error) {
-    errorResponse(res, error.message);
+    console.error('Update product error:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 
-// Delete product (soft delete - hide)
-const deleteProduct = async (req, res) => {
+// Hide product (soft delete - set invisible)
+const hideProduct = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
     const product = await Product.findOneAndUpdate(
@@ -107,9 +148,51 @@ const deleteProduct = async (req, res) => {
       { new: true }
     );
     if (!product) return errorResponse(res, 'Product not found', 404);
-    successResponse(res, null, 'Product removed');
+    successResponse(res, { product }, 'Product hidden successfully');
   } catch (error) {
     errorResponse(res, error.message);
+  }
+};
+
+// Show product (make visible again)
+const showProduct = async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ vendorId: req.user._id });
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, shopId: shop._id },
+      { isVisible: true },
+      { new: true }
+    );
+    if (!product) return errorResponse(res, 'Product not found', 404);
+    successResponse(res, { product }, 'Product shown successfully');
+  } catch (error) {
+    errorResponse(res, error.message);
+  }
+};
+
+// Permanently delete product (hard delete)
+const deleteProduct = async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ vendorId: req.user._id });
+    const product = await Product.findOneAndDelete({
+      _id: req.params.id,
+      shopId: shop._id
+    });
+    if (!product) return errorResponse(res, 'Product not found', 404);
+    successResponse(res, null, 'Product permanently deleted');
+  } catch (error) {
+    errorResponse(res, error.message);
+  }
+};
+
+// Get all categories for vendor dropdown
+const getCategoriesForVendor = async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ name: 1 });
+    successResponse(res, { categories });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    errorResponse(res, error.message, 500);
   }
 };
 
@@ -118,7 +201,6 @@ const getOrders = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
 
-    // If no shop exists, return empty orders array
     if (!shop) {
       return successResponse(res, { orders: [] });
     }
@@ -128,10 +210,9 @@ const getOrders = async (req, res) => {
       .populate('items.productId', 'name price images')
       .sort('-createdAt');
 
-    // Filter to show only items belonging to this vendor
     const filteredOrders = orders.map(order => ({
       ...order.toObject(),
-      items: order.items.filter(item => 
+      items: order.items.filter(item =>
         item.shopId && item.shopId.toString() === shop._id.toString()
       )
     }));
@@ -151,7 +232,6 @@ const updateOrderStatus = async (req, res) => {
 
     if (!order) return errorResponse(res, 'Order not found', 404);
 
-    // Verify this order contains vendor's products
     const shop = await Shop.findOne({ vendorId: req.user._id });
     const hasVendorProducts = order.items.some(
       item => item.shopId && item.shopId.toString() === shop._id.toString()
@@ -177,7 +257,6 @@ const getRevenueAnalytics = async (req, res) => {
   try {
     const shop = await Shop.findOne({ vendorId: req.user._id });
 
-    // If no shop exists, return zeros
     if (!shop) {
       return successResponse(res, {
         totalEarnings: 0,
@@ -236,7 +315,10 @@ module.exports = {
   getProducts,
   addProduct,
   updateProduct,
+  hideProduct,
+  showProduct,
   deleteProduct,
+  getCategoriesForVendor,  // ← ADD THIS EXPORT
   getOrders,
   updateOrderStatus,
   getRevenueAnalytics,

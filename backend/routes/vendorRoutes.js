@@ -9,7 +9,10 @@ const {
   getProducts,
   addProduct,
   updateProduct,
+  hideProduct,
+  showProduct,
   deleteProduct,
+  getCategoriesForVendor,
   getOrders,
   updateOrderStatus,
   getRevenueAnalytics,
@@ -24,7 +27,10 @@ router.put('/shop', updateShop);
 router.get('/products', getProducts);
 router.post('/products', addProduct);
 router.put('/products/:id', updateProduct);
+router.put('/products/:id/hide', hideProduct);
+router.put('/products/:id/show', showProduct);
 router.delete('/products/:id', deleteProduct);
+router.get('/categories', getCategoriesForVendor);  // ← USE THE CONTROLLER FUNCTION
 router.get('/orders', getOrders);
 router.put('/orders/:id/status', updateOrderStatus);
 router.get('/revenue', getRevenueAnalytics);

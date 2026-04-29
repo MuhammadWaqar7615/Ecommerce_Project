@@ -36,13 +36,13 @@ module.exports = {
     OTHER: 'Other',
   },
   
-  PRODUCT_CATEGORIES: [
-    'Food',
-    'Crafts',
-    'Sandals',
-    'Home Decor',
-    'Other',
-  ],
+  // PRODUCT_CATEGORIES: [
+  //   'Food',
+  //   'Crafts',
+  //   'Sandals',
+  //   'Home Decor',
+  //   'Other',
+  // ],
   
   ORDER_STATUS_SEQUENCE: {
     'Pending': 1,

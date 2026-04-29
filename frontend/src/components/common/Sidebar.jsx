@@ -12,7 +12,8 @@ import {
     UserCheck,
     LogOut,
     ShoppingCart,
-    User
+    User, 
+    HomeIcon
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen }) => {
@@ -40,6 +41,7 @@ const Sidebar = ({ isOpen }) => {
                     { id: 'vendors', name: 'Pending Vendors', path: '/admin/pending-vendors', icon: UserCheck },
                     { id: 'users', name: 'User Management', path: '/admin/users', icon: Users },
                     { id: 'products', name: 'Products', path: '/admin/products', icon: Package },
+                    { id: 'categories', name: 'Categories', path: '/admin/categories', icon: Settings },
                     { id: 'orders', name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
                     { id: 'settings', name: 'Settings', path: '/admin/settings', icon: Settings },
                 ];
@@ -55,6 +57,7 @@ const Sidebar = ({ isOpen }) => {
 
             case 'customer':
                 return [
+                    { id: 'searchProducts', name: 'Search Products', path: '/', icon: HomeIcon },
                     { id: 'overview', name: 'Dashboard', path: '/customer/dashboard', icon: LayoutDashboard },
                     { id: 'orders', name: 'My Orders', path: '/customer/orders', icon: ShoppingBag },
                     { id: 'profile', name: 'Profile', path: '/customer/profile', icon: User },

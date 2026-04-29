@@ -3,6 +3,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Dispute = require('../models/Dispute');
 const Setting = require('../models/Setting');
+const Category = require('../models/Category');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
 // ==================== VENDOR MANAGEMENT ====================
@@ -119,6 +120,70 @@ const deleteUser = async (req, res) => {
     await User.findByIdAndDelete(id);
 
     successResponse(res, null, 'User deleted successfully');
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
+
+// ==================== CATEGORY MANAGEMENT ====================
+
+// Get all categories
+const getAllCategories = async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ name: 1 });
+    successResponse(res, { categories });
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
+
+// Update category
+const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    const category = await Category.findById(id);
+    if (!category) {
+      return errorResponse(res, 'Category not found', 404);
+    }
+
+    const oldName = category.name;
+    category.name = name;
+    await category.save();
+
+    // Products remain linked to same category ID (name change doesn't affect them)
+    successResponse(res, { category }, 'Category updated successfully');
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
+
+// Delete category
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const category = await Category.findById(id);
+    if (!category) {
+      return errorResponse(res, 'Category not found', 404);
+    }
+
+    // Get or create "Uncategorized" category
+    let uncategorized = await Category.findOne({ name: 'Uncategorized' });
+    if (!uncategorized) {
+      uncategorized = await Category.create({ name: 'Uncategorized' });
+    }
+
+    // Update all products with this category to "Uncategorized"
+    await Product.updateMany(
+      { category: id },
+      { category: uncategorized._id }
+    );
+
+    await Category.findByIdAndDelete(id);
+
+    successResponse(res, null, 'Category deleted. Products moved to Uncategorized');
   } catch (error) {
     errorResponse(res, error.message, 500);
   }
@@ -322,6 +387,11 @@ module.exports = {
   getAllUsers,
   suspendUser,
   deleteUser,
+
+  // Category Management
+  getAllCategories,
+  updateCategory,
+  deleteCategory,
 
   // Product Management
   getAllProducts,

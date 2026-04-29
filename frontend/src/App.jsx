@@ -33,6 +33,7 @@ import ProductManagement from './components/vendor/ProductManagement';
 import OrderManagementVendor from './components/vendor/OrderManagementVendor';
 import RevenueAnalytics from './components/vendor/RevenueAnalytics';
 import CustomerOrderDetail from './pages/CustomerOrderDetail';
+import CategoryManagement from './components/admin/CategoryManagement';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -61,6 +62,7 @@ const AdminLayout = () => {
         <Route path="/pending-vendors" element={<PendingVendors />} />
         <Route path="/users" element={<UserManagement />} />
         <Route path="/products" element={<ProductModeration />} />
+        <Route path="/categories" element={<CategoryManagement />} />
         <Route path="/orders" element={<OrderManagement />} />
         <Route path="/settings" element={<SystemSettings />} />
       </Routes>

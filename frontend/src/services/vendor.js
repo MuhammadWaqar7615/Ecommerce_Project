@@ -57,9 +57,48 @@ export const updateProduct = async (id, productData) => {
   }
 };
 
+// Hide product (soft delete)
+export const hideProduct = async (id) => {
+  try {
+    const response = await api.put(`/vendor/products/${id}/hide`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
+// Show product (make visible)
+export const showProduct = async (id) => {
+  try {
+    const response = await api.put(`/vendor/products/${id}/show`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
+// Permanently delete product
 export const deleteProduct = async (id) => {
   try {
     const response = await api.delete(`/vendor/products/${id}`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+// export const deleteProduct = async (id) => {
+//   try {
+//     const response = await api.delete(`/vendor/products/${id}`);
+//     return handleResponse(response);
+//   } catch (error) {
+//     throw new Error(handleError(error));
+//   }
+// };
+
+// Get categories for vendor
+export const getVendorCategories = async () => {
+  try {
+    const response = await api.get('/vendor/categories');
     return handleResponse(response);
   } catch (error) {
     throw new Error(handleError(error));

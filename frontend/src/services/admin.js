@@ -41,6 +41,43 @@ export const getAllUsers = async (page = 1, limit = 20, role = '') => {
   }
 };
 
+// Category Management
+export const getAllCategories = async () => {
+  try {
+    const response = await api.get('/admin/categories');
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
+export const addCategory = async (categoryData) => {
+  try {
+    const response = await api.post('/admin/categories', categoryData);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
+export const updateCategory = async (id, categoryData) => {
+  try {
+    const response = await api.put(`/admin/categories/${id}`, categoryData);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
+export const deleteCategory = async (id) => {
+  try {
+    const response = await api.delete(`/admin/categories/${id}`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
 export const suspendUser = async (userId) => {
   try {
     const response = await api.put(`/admin/users/${userId}/suspend`);

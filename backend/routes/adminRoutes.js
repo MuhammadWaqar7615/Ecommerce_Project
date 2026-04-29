@@ -9,6 +9,9 @@ const {
   getAllUsers,
   suspendUser,
   deleteUser,
+  getAllCategories,
+  updateCategory,
+  deleteCategory,
   getAllProducts,
   toggleProductVisibility,
   getAllOrders,
@@ -29,6 +32,11 @@ router.put('/vendors/:id/suspend', suspendVendor);
 router.get('/users', getAllUsers);
 router.put('/users/:id/suspend', suspendUser);
 router.delete('/users/:id', deleteUser);
+
+// Category Management
+router.get('/categories', getAllCategories);
+router.put('/categories/:id', updateCategory);
+router.delete('/categories/:id', deleteCategory);
 
 // Product Management
 router.get('/products', getAllProducts);

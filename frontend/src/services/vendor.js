@@ -77,6 +77,16 @@ export const showProduct = async (id) => {
   }
 };
 
+// Get single product by ID
+export const getProductById = async (id) => {
+  try {
+    const response = await api.get(`/vendor/products/${id}`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error));
+  }
+};
+
 // Permanently delete product
 export const deleteProduct = async (id) => {
   try {
@@ -86,16 +96,32 @@ export const deleteProduct = async (id) => {
     throw new Error(handleError(error));
   }
 };
-// export const deleteProduct = async (id) => {
-//   try {
-//     const response = await api.delete(`/vendor/products/${id}`);
-//     return handleResponse(response);
-//   } catch (error) {
-//     throw new Error(handleError(error));
-//   }
-// };
 
-// Get categories for vendor
+// Upload product image
+export const uploadProductImage = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = localStorage.getItem('token');
+    const response = await fetch('http://localhost:5000/api/vendor/upload-image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message);
+    }
+    return data;
+  } catch (error) {
+    throw new Error(error.message || 'Upload failed');
+  }
+};
+
 export const getVendorCategories = async () => {
   try {
     const response = await api.get('/vendor/categories');

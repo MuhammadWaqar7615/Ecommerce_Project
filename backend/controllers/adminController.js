@@ -163,24 +163,25 @@ const updateCategory = async (req, res) => {
 const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
-
     const category = await Category.findById(id);
+
     if (!category) {
       return errorResponse(res, 'Category not found', 404);
     }
 
-    // Get or create "Uncategorized" category
+    // Find or create "Uncategorized" category
     let uncategorized = await Category.findOne({ name: 'Uncategorized' });
     if (!uncategorized) {
       uncategorized = await Category.create({ name: 'Uncategorized' });
     }
 
-    // Update all products with this category to "Uncategorized"
+    // Move all products from this category to "Uncategorized"
     await Product.updateMany(
       { category: id },
       { category: uncategorized._id }
     );
 
+    // Delete the category
     await Category.findByIdAndDelete(id);
 
     successResponse(res, null, 'Category deleted. Products moved to Uncategorized');

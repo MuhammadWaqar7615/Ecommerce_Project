@@ -24,6 +24,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+app.use('/uploads', express.static('uploads'));
+
 // 404 handler
 app.use((req, res) => {
   errorResponse(res, 'Route not found', 404);

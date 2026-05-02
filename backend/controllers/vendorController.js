@@ -64,6 +64,22 @@ const getProducts = async (req, res) => {
     errorResponse(res, error.message);
   }
 };
+// Get single product by ID
+const getProductById = async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ vendorId: req.user._id });
+    const product = await Product.findOne({ _id: req.params.id, shopId: shop._id })
+      .populate('category', 'name');
+
+    if (!product) {
+      return errorResponse(res, 'Product not found', 404);
+    }
+
+    successResponse(res, { product });
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
 
 // Add product
 const addProduct = async (req, res) => {
@@ -313,6 +329,7 @@ module.exports = {
   getShop,
   updateShop,
   getProducts,
+  getProductById,
   addProduct,
   updateProduct,
   hideProduct,

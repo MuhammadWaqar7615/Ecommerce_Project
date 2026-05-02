@@ -30,10 +30,13 @@ import AnalyticsDashboard from './components/admin/AnalyticsDashboard';
 import VendorOverview from './components/vendor/VendorOverview';
 import ShopManagement from './components/vendor/ShopManagement';
 import ProductManagement from './components/vendor/ProductManagement';
+// import ProductManagement from './components/vendor/ProductManagement/index';
+// import ProductManagement from './components/vendor/productManagement/ProductManagement';
 import OrderManagementVendor from './components/vendor/OrderManagementVendor';
 import RevenueAnalytics from './components/vendor/RevenueAnalytics';
 import CustomerOrderDetail from './pages/CustomerOrderDetail';
 import CategoryManagement from './components/admin/CategoryManagement';
+import AddEditProduct from './pages/AddEditProduct';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -78,6 +81,8 @@ const VendorLayout = () => {
         <Route path="/" element={<VendorOverview />} />
         <Route path="/shop" element={<ShopManagement />} />
         <Route path="/products" element={<ProductManagement />} />
+        <Route path="/products/add" element={<AddEditProduct />} />
+        <Route path="/products/edit/:id" element={<AddEditProduct />} />
         <Route path="/orders" element={<OrderManagementVendor />} />
         <Route path="/revenue" element={<RevenueAnalytics />} />
       </Routes>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, EyeOff, Package, Upload, X, Image } from 'lucide-react';
 import { getVendorProducts, addProduct, updateProduct, deleteProduct } from '../../services/vendor';
@@ -66,15 +67,9 @@ const ProductManagement = () => {
 
         // Check file type
         if (!file.type.startsWith('image/')) {
-            alert('Please upload an image file');
+            toast.error('Please upload an image file');
             return;
         }
-
-        // Check file size (max 5MB)
-        // if (file.size > 5 * 1024 * 1024) {
-        //   alert('Image size should be less than 5MB');
-        //   return;
-        // }
 
         setUploading(true);
         const formDataImg = new FormData();
@@ -96,12 +91,12 @@ const ProductManagement = () => {
                     ...prev,
                     images: [...prev.images, result.data.imageUrl]
                 }));
-                alert('Image uploaded successfully!');
+                toast.success('Image uploaded successfully!');
             } else {
-                alert(result.message);
+                toast.error(result.message);
             }
         } catch (error) {
-            alert('Failed to upload image');
+            toast.error('Failed to upload image');
         } finally {
             setUploading(false);
         }
@@ -125,17 +120,17 @@ const ProductManagement = () => {
 
             if (editingProduct) {
                 await updateProduct(editingProduct._id, productData);
-                alert('Product updated successfully!');
+                toast.success('Product updated successfully!');
             } else {
                 await addProduct(productData);
-                alert('Product added successfully!');
+                toast.success('Product added successfully!');
             }
 
             setShowModal(false);
             resetForm();
             await fetchProducts();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
@@ -146,19 +141,6 @@ const ProductManagement = () => {
         setShowNewCategory(false);
     };
 
-    //   const handleEdit = (product) => {
-    //     setEditingProduct(product);
-    //     setFormData({
-    //       name: product.name,
-    //       description: product.description,
-    //       category: product.category?._id || product.category,
-    //       price: product.price,
-    //       stock: product.stock,
-    //       images: product.images || [],
-    //     });
-    //     setShowModal(true);
-    //   };
-
     const handleEdit = (product) => {
         navigate(`/vendor/products/edit/${product._id}`);
     };
@@ -168,10 +150,10 @@ const ProductManagement = () => {
         if (confirm(`Are you sure you want to ${action} this product?`)) {
             try {
                 await updateProduct(product._id, { isVisible: !product.isVisible });
-                alert(`Product ${action}n successfully!`);
+                toast.success(`Product ${action}n successfully!`);
                 await fetchProducts();
             } catch (error) {
-                alert(error.message);
+                toast.error(error.message);
             }
         }
     };
@@ -180,10 +162,10 @@ const ProductManagement = () => {
         if (confirm(`Are you sure you want to PERMANENTLY DELETE "${productName}"? This action cannot be undone!`)) {
             try {
                 await deleteProduct(productId);
-                alert('Product deleted permanently!');
+                toast.success('Product deleted permanently!');
                 await fetchProducts();
             } catch (error) {
-                alert(error.message);
+                toast.error(error.message);
             }
         }
     };
@@ -276,7 +258,18 @@ const ProductManagement = () => {
                     </table>
                 </div>
             )}
-
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
         </div>
     );
 };

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Upload, Star, Trash2, GripVertical } from 'lucide-react';
 import { PhotoProvider, PhotoView } from 'react-photo-view';
@@ -46,9 +48,8 @@ const SortableImage = ({ image, index, isPrimary, onDelete }) => {
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative group rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-grab active:cursor-grabbing ${
-        isPrimary ? 'border-primary shadow-lg' : 'border-gray-200'
-      }`}
+      className={`relative group rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-grab active:cursor-grabbing ${isPrimary ? 'border-primary shadow-lg' : 'border-gray-200'
+        }`}
     >
       <PhotoView src={image}>
         <div className="w-full aspect-video sm:aspect-square cursor-pointer">
@@ -151,7 +152,7 @@ const AddEditProduct = () => {
       });
     } catch (error) {
       console.error(error);
-      alert('Product not found');
+      toast.error('Product not found');
       navigate('/vendor/products');
     } finally {
       setPageLoading(false);
@@ -168,7 +169,7 @@ const AddEditProduct = () => {
 
     for (const file of files) {
       if (!file.type.startsWith('image/')) {
-        alert('Please upload image files only');
+        toast.error('Please upload image files only');
         continue;
       }
 
@@ -191,10 +192,10 @@ const AddEditProduct = () => {
             images: [...prev.images, result.data.imageUrl],
           }));
         } else {
-          alert(result.message);
+          toast.error(result.message);
         }
       } catch (error) {
-        alert('Failed to upload image');
+        toast.error('Failed to upload image');
       } finally {
         setUploading(false);
       }
@@ -242,14 +243,14 @@ const AddEditProduct = () => {
 
       if (isEditMode) {
         await updateProduct(id, productData);
-        alert('Product updated successfully!');
+        toast.success('Product updated successfully!');
       } else {
         await addProduct(productData);
-        alert('Product added successfully!');
+        toast.success('Product added successfully!');
       }
       navigate('/vendor/products');
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -510,6 +511,18 @@ const AddEditProduct = () => {
           </form>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 };

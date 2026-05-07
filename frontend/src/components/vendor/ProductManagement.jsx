@@ -236,7 +236,7 @@ const ProductManagement = () => {
     const getStockStatus = (stock) => {
         if (stock === 0) return { label: 'Out of Stock', color: 'red', icon: '🔴' };
         if (stock <= 10) return { label: 'Low Stock', color: 'orange', icon: '🟠' };
-        return { label: 'In Stock', color: 'green', icon: '🟢' };
+        return { label: '', color: 'green', icon: '🟢' };
     };
 
     if (loading) {

@@ -37,6 +37,7 @@ import RevenueAnalytics from './components/vendor/RevenueAnalytics';
 import CustomerOrderDetail from './pages/CustomerOrderDetail';
 import CategoryManagement from './components/admin/CategoryManagement';
 import AddEditProduct from './pages/AddEditProduct';
+import AuthCallback from './pages/AuthCallback';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -103,6 +104,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth-callback" element={<AuthCallback />} />
 
           {/* Customer Routes */}
           <Route path="/cart" element={

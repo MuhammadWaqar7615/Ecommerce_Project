@@ -1,34 +1,23 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const passport = require('passport');
 const { errorResponse } = require('../utils/apiResponse');
 
-const protect = async (req, res, next) => {
-  let token;
+// Passport JWT authentication middleware
+const protect = passport.authenticate('jwt', { session: false });
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) {
-    return errorResponse(res, 'Not authorized, no token', 401);
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password');
-    
-    if (!req.user) {
-      return errorResponse(res, 'User not found', 401);
+// Wrapper to convert Passport middleware to async error handling
+const protectAsync = (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user, info) => {
+    if (err) {
+      return errorResponse(res, err.message || 'Authentication error', 401);
     }
-    
-    if (!req.user.isActive) {
-      return errorResponse(res, 'Account is deactivated', 401);
+
+    if (!user) {
+      return errorResponse(res, info?.message || 'Not authorized', 401);
     }
-    
+
+    req.user = user;
     next();
-  } catch (error) {
-    return errorResponse(res, 'Not authorized, token failed', 401);
-  }
+  })(req, res, next);
 };
 
-module.exports = { protect };
+module.exports = { protect, protectAsync };

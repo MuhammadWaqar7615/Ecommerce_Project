@@ -1,16 +1,21 @@
-const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config();
+
+const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const passport = require('./config/passport');
 const { errorResponse } = require('./utils/apiResponse');
 
-dotenv.config();
 connectDB();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Initialize Passport middleware
+app.use(passport.initialize());
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -19,6 +24,16 @@ app.use('/api/vendor', require('./routes/vendorRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/public', require('./routes/publicRoutes'));
 app.use('/api/password', require('./routes/passwordRoutes'));
+app.use('/api/webhook', require('./routes/webhookRoutes'));
+
+// Auth error handler
+app.get('/auth-error', (req, res) => {
+  res.status(401).json({
+    success: false,
+    message: 'Authentication failed. Please try again.',
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });

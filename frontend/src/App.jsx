@@ -16,6 +16,8 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import VendorDashboard from './pages/VendorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ForgotPassword from './components/auth/ForgotPassword';
+import EmailVerification from './pages/EmailVerification';
+import PasswordReset from './pages/PasswordReset';
 import CustomerOrders from './pages/CustomerOrders';
 import CustomerProfile from './pages/CustomerProfile';
 import { LoadingProvider } from './context/LoadingContext';
@@ -94,7 +96,6 @@ const VendorLayout = () => {
 function AppContent() {
   return (
     <>
-      {/* <Navbar /> */}
       <main className="min-h-screen">
         <Routes>
           {/* Public Routes */}
@@ -103,7 +104,9 @@ function AppContent() {
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<PasswordReset />} />
           <Route path="/auth-callback" element={<AuthCallback />} />
 
           {/* Customer Routes */}
@@ -153,7 +156,6 @@ function AppContent() {
           } />
         </Routes>
       </main>
-      {/* <Footer /> */}
     </>
   );
 }

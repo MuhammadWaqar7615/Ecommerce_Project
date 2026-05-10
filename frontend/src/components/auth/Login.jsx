@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { login, loginWithGoogle } from '../../services/auth';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Can be email or username
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,8 +17,8 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    if (!email.trim()) {
-      setError('Please enter your email');
+    if (!identifier.trim()) {
+      setError('Please enter your email or username');
       setLoading(false);
       return;
     }
@@ -30,25 +30,22 @@ const Login = () => {
     }
 
     try {
-      console.log('Attempting login with:', email);
-      const data = await login(email, password);
+      console.log('Attempting login with:', identifier);
+      const data = await login(identifier, password);
       console.log('Login response data:', data);
 
       if (data && data.user) {
-        // Check if email is verified
         if (!data.user.isEmailVerified) {
-          setError('Please verify your email before logging in. Redirecting to verification page...');
+          setError('Your email is not verified yet. Check your inbox for the verification email.');
           setTimeout(() => {
-            navigate('/verify-email');
-          }, 2000);
+            navigate(`/verify-email?email=${encodeURIComponent(data.user.email)}&status=sent`);
+          }, 1800);
           setLoading(false);
           return;
         }
 
         loginUser(data.user, data.token);
-        console.log('User role:', data.user.role);
 
-        // Redirect based on role
         if (data.user.role === 'admin') {
           window.location.href = '/admin/dashboard';
         } else if (data.user.role === 'vendor') {
@@ -61,7 +58,10 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error caught:', err);
-      setError(err.message || 'Invalid email or password');
+      setError(
+        err.message ||
+          'Unable to sign in. Please check your email/username and password and try again.'
+      );
       setLoading(false);
     }
   };
@@ -78,8 +78,8 @@ const Login = () => {
   // Reset error when user types
   const handleInputChange = (e) => {
     setError('');
-    if (e.target.name === 'email') {
-      setEmail(e.target.value);
+    if (e.target.name === 'identifier') {
+      setIdentifier(e.target.value);
     } else {
       setPassword(e.target.value);
     }
@@ -116,17 +116,17 @@ const Login = () => {
 
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+              <label htmlFor="identifier" className="sr-only">
+                Email or Username
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="identifier"
+                name="identifier"
+                type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
+                placeholder="Email or Username"
+                value={identifier}
                 onChange={handleInputChange}
               />
             </div>

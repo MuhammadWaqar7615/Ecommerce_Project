@@ -38,9 +38,9 @@ export const verifyEmail = async (token) => {
 };
 
 // ==================== LOGIN ====================
-export const login = async (email, password) => {
+export const login = async (identifier, password) => {
   try {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/auth/login', { email: identifier, password });
     const data = handleResponse(response);
     if (data.token) {
       localStorage.setItem('token', data.token);

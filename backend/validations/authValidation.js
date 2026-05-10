@@ -25,9 +25,31 @@ const registerValidation = [
 
 const loginValidation = [
   body('email')
-    .isEmail()
-    .withMessage('Please enter a valid email')
-    .normalizeEmail(),
+    .trim()
+    .notEmpty()
+    .withMessage('Email or username is required')
+    .custom((value) => {
+      // Allow either email format or username format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+      // if email contains '@', validate as email, otherwise validate as username
+      if (value.includes('@')) {
+        if (emailRegex.test(value)) {
+          return true;
+        }
+        throw new Error('Please enter a valid email');
+      } else {
+        if (usernameRegex.test(value)) {
+          return true;
+        }
+        throw new Error('Username must be 3-30 characters and can only contain letters, numbers, and underscores');
+      }
+   
+      if ( emailRegex.test(value) || usernameRegex.test(value)) {
+        return true;
+      }
+      throw new Error('Please enter a valid email or username');
+    }),
   body('password')
     .notEmpty()
     .withMessage('Password is required'),

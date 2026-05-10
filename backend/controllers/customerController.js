@@ -3,10 +3,29 @@ const Cart = require('../models/Cart');
 const Order = require('../models/Order');
 const Review = require('../models/Review');
 const Dispute = require('../models/Dispute');
+const Category = require('../models/Category');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { calculateShippingFee } = require('../services/shippingService');
 const { calculateVendorEarnings } = require('../services/commissionService');
 const generateOrderNumber = require('../utils/generateOrderNumber');
+
+const resolveCategoryFilter = async (categoryValue) => {
+  if (!categoryValue) return null;
+  const trimmed = String(categoryValue).trim();
+
+  if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
+    const category = await Category.findById(trimmed);
+    if (category) return category._id;
+  }
+
+  const category = await Category.findOne({
+    $or: [
+      { name: trimmed },
+      { slug: trimmed.toLowerCase().replace(/ /g, '-') },
+    ],
+  });
+  return category ? category._id : null;
+};
 
 // Get products with filters
 const getProducts = async (req, res) => {
@@ -14,7 +33,18 @@ const getProducts = async (req, res) => {
     const { page = 1, limit = 20, category, minPrice, maxPrice, search } = req.query;
     const query = { isVisible: true, stock: { $gt: 0 } };
 
-    if (category) query.category = category;
+    if (category) {
+      const categoryId = await resolveCategoryFilter(category);
+      if (!categoryId) {
+        return successResponse(res, {
+          products: [],
+          totalPages: 0,
+          currentPage: page,
+          total: 0,
+        });
+      }
+      query.category = categoryId;
+    }
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
@@ -26,6 +56,7 @@ const getProducts = async (req, res) => {
 
     const products = await Product.find(query)
       .populate('shopId')
+      .populate('category', 'name')
       .sort('-createdAt')
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -46,7 +77,9 @@ const getProducts = async (req, res) => {
 // Get single product
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('shopId');
+    const product = await Product.findById(req.params.id)
+      .populate('shopId')
+      .populate('category', 'name');
     if (!product) {
       return errorResponse(res, 'Product not found', 404);
     }

@@ -18,12 +18,16 @@ passport.use(
     },
     async (email, password, done) => {
       try {
-        // Find user by email or username
-        const user = await User.findOne({
-          $or: [{ email: email.toLowerCase() }, { username: email }],
-          provider: 'local',
-        });
-
+        // Find user by email or username; allow legacy local accounts with no provider field
+        console.log(email, password)
+        // if email contains '@', search by email, otherwise search by username
+        let user;
+        if (email.includes('@')) {
+          user = await User.findOne({ email: email, provider: { $in: ['local', null] } })
+        } else {
+          user = await User.findOne({ username: email, provider: { $in: ['local', null] } })
+        }
+        // console.log(user)
         if (!user) {
           return done(null, false, {
             message: 'User not found with this email/username',
@@ -36,9 +40,10 @@ passport.use(
             message: 'Please verify your email before logging in',
           });
         }
-
+        console.log('User found:', user) // Debugging line
         // Verify password
         const isPasswordValid = await user.comparePassword(password);
+        console.log(password, user.password, isPasswordValid)
         if (!isPasswordValid) {
           return done(null, false, { message: 'Invalid password' });
         }
@@ -52,6 +57,7 @@ passport.use(
 
         return done(null, user);
       } catch (error) {
+        console.log(error)
         return done(error);
       }
     }

@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/order';
 import { formatPrice } from '../utils/formatPrice';
 
 const Checkout = () => {
-  const { cart, loadCart } = useCart();
+  const { cart, loadCart, loading: cartLoading } = useCart();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
     city: 'Khanewal',
@@ -22,12 +22,13 @@ const Checkout = () => {
   };
 
   const subtotal = calculateSubtotal();
-  const shippingFee = 150 + (shippingDistance * 10);
+  const safeDistance = Number.isNaN(Number(shippingDistance)) ? 0 : Number(shippingDistance);
+  const shippingFee = 150 + safeDistance * 10;
   const total = subtotal + shippingFee;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     
     try {
       const orderData = {
@@ -41,12 +42,25 @@ const Checkout = () => {
     } catch (error) {
       alert(error.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  useEffect(() => {
+    if (!cartLoading && cart && cart.items && cart.items.length === 0) {
+      navigate('/cart');
+    }
+  }, [cart, cartLoading, navigate]);
+
+  if (cartLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <p className="text-gray-600">Loading cart...</p>
+      </div>
+    );
+  }
+
   if (!cart?.items || cart.items.length === 0) {
-    navigate('/cart');
     return null;
   }
 
@@ -112,7 +126,10 @@ const Checkout = () => {
                   max="50"
                   className="input-field"
                   value={shippingDistance}
-                  onChange={(e) => setShippingDistance(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setShippingDistance(Number.isNaN(value) ? 1 : Math.max(1, Math.min(50, value)));
+                  }}
                 />
                 <p className="text-xs text-gray-500 mt-1">Shipping fee: {formatPrice(150)} base + {formatPrice(10)}/km</p>
               </div>
@@ -120,10 +137,10 @@ const Checkout = () => {
             
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting}
               className="btn-primary w-full mt-6 disabled:opacity-50"
             >
-              {loading ? 'Processing...' : `Place Order • ${formatPrice(total)}`}
+              {submitting ? 'Processing...' : `Place Order • ${formatPrice(total)}`}
             </button>
           </form>
         </div>
@@ -133,12 +150,15 @@ const Checkout = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="space-y-2 mb-4">
-              {cart.items.map((item) => (
-                <div key={item.productId._id} className="flex justify-between text-sm">
-                  <span>{item.quantity}x {item.productId.name}</span>
-                  <span>{formatPrice(item.priceAtAdd * item.quantity)}</span>
-                </div>
-              ))}
+              {cart.items.map((item) => {
+                const product = item.productId || {};
+                return (
+                  <div key={product._id || item._id} className="flex justify-between text-sm">
+                    <span>{item.quantity}x {product.name || 'Product'}</span>
+                    <span>{formatPrice(item.priceAtAdd * item.quantity)}</span>
+                  </div>
+                );
+              })}
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>

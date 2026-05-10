@@ -26,7 +26,7 @@ export const getProducts = async (filters = {}) => {
 // Get single product - use public endpoint
 export const getProductById = async (id) => {
   try {
-    const response = await api.get(`/public/search?productId=${id}`);
+    const response = await api.get(`/public/products/${id}`);
     return handleResponse(response);
   } catch (error) {
     throw new Error(handleError(error));

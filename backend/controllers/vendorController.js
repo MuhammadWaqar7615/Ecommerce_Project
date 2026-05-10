@@ -5,6 +5,19 @@ const User = require('../models/User');
 const Category = require('../models/Category');  // ← ADD THIS IMPORT
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
+const resolveCategoryId = async (categoryValue) => {
+  if (!categoryValue) return null;
+  const trimmed = String(categoryValue).trim();
+
+  if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
+    const existingCategory = await Category.findById(trimmed);
+    if (existingCategory) return existingCategory._id;
+  }
+
+  const existingCategory = await Category.findOne({ name: trimmed });
+  return existingCategory ? existingCategory._id : null;
+};
+
 // Create shop
 const createShop = async (req, res) => {
   try {
@@ -91,23 +104,22 @@ const addProduct = async (req, res) => {
 
     let { name, description, category, price, stock, images } = req.body;
 
-    // If category is a string (new category), create it first
-    if (typeof category === 'string' && !category.match(/^[0-9a-fA-F]{24}$/)) {
-      // It's a new category name, not an ObjectId
-      let existingCategory = await Category.findOne({ name: category.trim() });
-      if (!existingCategory) {
-        existingCategory = await Category.create({ name: category.trim() });
-      }
-      category = existingCategory._id;
+    if (!category) {
+      return errorResponse(res, 'Category is required', 400);
+    }
+
+    const resolvedCategory = await resolveCategoryId(category);
+    if (!resolvedCategory) {
+      return errorResponse(res, 'Invalid category. Use an existing category.', 400);
     }
 
     const product = await Product.create({
       shopId: shop._id,
       name,
       description,
-      category,
+      category: resolvedCategory,
       price: parseFloat(price),
-      stock: parseInt(stock),
+      stock: parseInt(stock, 10),
       images: images || [],
     });
 
@@ -128,23 +140,23 @@ const updateProduct = async (req, res) => {
       return errorResponse(res, 'Product not found', 404);
     }
 
-    const { name, description, category, price, stock, images } = req.body;
+    const { name, description, category, price,isVisible, stock, images } = req.body;
 
-    // If category is changing, create it if doesn't exist
-    if (category && category !== product.category) {
-      const existingCategory = await Category.findOne({ name: category.trim() });
-      if (!existingCategory) {
-        await Category.create({ name: category.trim() });
+    let resolvedCategory = product.category;
+    if (category && category !== String(product.category)) {
+      resolvedCategory = await resolveCategoryId(category);
+      if (!resolvedCategory) {
+        return errorResponse(res, 'Invalid category. Use an existing category.', 400);
       }
     }
 
     product.name = name || product.name;
     product.description = description !== undefined ? description : product.description;
-    product.category = category || product.category;
+    product.category = resolvedCategory;
     product.price = price !== undefined ? price : product.price;
     product.stock = stock !== undefined ? stock : product.stock;
     product.images = images || product.images;
-
+    product.isVisible = isVisible !== undefined ? isVisible : product.isVisible;
     await product.save();
 
     successResponse(res, { product }, 'Product updated successfully');

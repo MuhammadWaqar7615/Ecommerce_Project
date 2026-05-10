@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../../services/auth';
+import { register, loginWithGoogle } from '../../services/auth';
 import { validateEmail, validatePassword, validatePhone } from '../../utils/validateForm';
 
 const Register = () => {
@@ -16,6 +16,10 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const navigate = useNavigate();
+
+  const handleGoogleSignup = () => {
+    loginWithGoogle();
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,7 +52,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await register({
+      await register({
         username: formData.username || formData.email.split('@')[0],
         email: formData.email,
         password: formData.password,
@@ -60,10 +64,11 @@ const Register = () => {
       setRegistrationSuccess(true);
       setError('');
 
-      // Redirect to email verification page after 2 seconds
       setTimeout(() => {
-        navigate('/verify-email');
-      }, 2000);
+        navigate(
+          `/verify-email?email=${encodeURIComponent(formData.email)}&status=sent`
+        );
+      }, 1500);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
       setLoading(false);
@@ -198,6 +203,17 @@ const Register = () => {
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creating account...' : 'Register'}
+              </button>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={loading}
+                className="group relative w-full flex justify-center items-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                Continue with Google
               </button>
             </div>
 

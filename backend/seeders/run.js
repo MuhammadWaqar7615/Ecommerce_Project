@@ -11,6 +11,10 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Setting = require('../models/Setting');
 
+// Import seeders
+const seedCategories = require('./seedCategories');
+const { hashPassword } = require('../utils/hashPassword');
+
 const runSeeders = async () => {
   try {
     if (!process.env.MONGODB_URI) {
@@ -22,10 +26,10 @@ const runSeeders = async () => {
     console.log('✅ Connected to MongoDB');
 
     // Create admin user
-    const adminExists = await User.findOne({ role: 'admin' });
+    let adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      await User.create({
+      const hashedPassword = await hashPassword('hello@123');
+      adminExists = await User.create({
         username: 'admin',
         email: 'admin@craftsdelights.com',
         password: hashedPassword,
@@ -34,11 +38,22 @@ const runSeeders = async () => {
         role: 'admin',
         isActive: true,
         isVendorApproved: true,
+        isEmailVerified: true,
       });
       console.log('✅ Admin user created');
       console.log('   Email: admin@craftsdelights.com');
-      console.log('   Password: admin123');
+      console.log('   Password: hello@123');
     } else {
+      if (!adminExists.isEmailVerified) {
+        adminExists.isEmailVerified = true;
+      }
+      if (!adminExists.provider) {
+        adminExists.provider = 'local';
+      }
+      if (adminExists.isModified && adminExists.isModified()) {
+        await adminExists.save();
+        console.log('✅ Updated existing admin to verified local provider');
+      }
       console.log('✅ Admin user already exists');
     }
 
@@ -59,6 +74,9 @@ const runSeeders = async () => {
     } else {
       console.log('✅ Settings already exist');
     }
+
+    // Seed categories
+    await seedCategories();
 
     console.log('\n🎉 All seeders completed successfully!');
     process.exit(0);

@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const { errorResponse } = require('../utils/apiResponse');
 const router = express.Router();
 const {
   register,
@@ -35,13 +36,22 @@ router.post('/verify-email', verifyEmailValidation, validate, verifyEmail);
 
 // ==================== LOGIN - PASSPORT LOCAL STRATEGY ====================
 // Login with email/username and password
-router.post(
-  '/login',
-  loginValidation,
-  validate,
-  passport.authenticate('local', { session: false }),
-  login
-);
+router.post('/login', loginValidation, validate, (req, res, next) => {
+  passport.authenticate('local', { session: false }, (err, user, info) => {
+    if (err) {
+      return errorResponse(res, err.message || 'Login failed. Please try again.', 500);
+    }
+    if (!user) {
+      return errorResponse(
+        res,
+        info?.message || 'Email/username or password is incorrect',
+        401
+      );
+    }
+    req.user = user;
+    next();
+  })(req, res, next);
+}, login);
 
 // ==================== GOOGLE OAUTH ====================
 // Initiate Google OAuth

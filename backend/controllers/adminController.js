@@ -137,6 +137,26 @@ const getAllCategories = async (req, res) => {
   }
 };
 
+// Create category
+const createCategory = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return errorResponse(res, 'Category name is required', 400);
+    }
+
+    const existingCategory = await Category.findOne({ name: name.trim() });
+    if (existingCategory) {
+      return errorResponse(res, 'Category already exists', 400);
+    }
+
+    const category = await Category.create({ name: name.trim() });
+    successResponse(res, { category }, 'Category created successfully', 201);
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
+
 // Update category
 const updateCategory = async (req, res) => {
   try {
@@ -204,6 +224,7 @@ const getAllProducts = async (req, res) => {
 
     const products = await Product.find(query)
       .populate('shopId')
+      .populate('category', 'name')
       .sort('-createdAt')
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -391,6 +412,7 @@ module.exports = {
 
   // Category Management
   getAllCategories,
+  createCategory,
   updateCategory,
   deleteCategory,
 

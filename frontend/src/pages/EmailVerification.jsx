@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const EmailVerification = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login, setError, clearError } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,8 +15,19 @@ const EmailVerification = () => {
   const [error, setErrorState] = useState('');
 
   useEffect(() => {
-    // Check if verification token is in URL
     const urlToken = searchParams.get('token');
+    const status = searchParams.get('status');
+    const emailParam = searchParams.get('email');
+
+    if (status === 'sent') {
+      const decodedEmail = emailParam ? decodeURIComponent(emailParam) : '';
+      setMessage(
+        decodedEmail
+          ? `Verification email sent to ${decodedEmail}. Please check your inbox and spam folder.`
+          : 'Verification email sent! Please check your inbox and spam folder.'
+      );
+    }
+
     if (urlToken) {
       setToken(urlToken);
       verifyEmailToken(urlToken);
@@ -26,12 +37,12 @@ const EmailVerification = () => {
   const verifyEmailToken = async (verificationToken) => {
     setVerifying(true);
     setErrorState('');
+    setMessage('');
     try {
       const response = await verifyEmail(verificationToken);
       setMessage('Email verified successfully! Logging you in...');
       if (response.user && response.token) {
         login(response.user, response.token);
-        // Redirect based on user role
         setTimeout(() => {
           if (response.user.role === 'admin') {
             navigate('/admin/dashboard');
@@ -115,7 +126,7 @@ const EmailVerification = () => {
           </div>
         )}
 
-        {!verifying && !message && (
+        {!verifying && !token && (
           <form className="mt-8 space-y-6" onSubmit={handleResendEmail}>
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
@@ -162,7 +173,7 @@ const EmailVerification = () => {
           </form>
         )}
 
-        {message && (
+        {message && token && (
           <div className="text-center text-sm text-gray-600">
             <button
               onClick={() => navigate('/login')}

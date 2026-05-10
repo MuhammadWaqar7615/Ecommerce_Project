@@ -1,23 +1,47 @@
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
-// Get dynamic categories from existing products
+const resolveCategoryFilter = async (categoryValue) => {
+  if (!categoryValue) return null;
+  const trimmed = String(categoryValue).trim();
+
+  if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
+    const category = await Category.findById(trimmed);
+    if (category) return category._id;
+  }
+
+  const category = await Category.findOne({
+    $or: [
+      { name: trimmed },
+      { slug: trimmed.toLowerCase().replace(/ /g, '-') },
+    ],
+  });
+  return category ? category._id : null;
+};
+
+// Get dynamic categories from category collection
 const getCategories = async (req, res) => {
   try {
-    // Get distinct categories from ALL products
-    const categories = await Product.distinct('category');
-    
-    // Filter out empty, null, or undefined categories
-    const validCategories = categories.filter(cat => cat && cat.trim().length > 0);
-    
-    // Sort alphabetically
-    validCategories.sort();
-    
-    console.log('Dynamic categories from DB:', validCategories);
-    
-    successResponse(res, { categories: validCategories });
+    const categories = await Category.find().sort({ name: 1 });
+    successResponse(res, { categories });
   } catch (error) {
     console.error('Error fetching categories:', error);
+    errorResponse(res, error.message, 500);
+  }
+};
+
+// Get single product by id for public access
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('shopId')
+      .populate('category', 'name');
+    if (!product || !product.isVisible || product.stock <= 0) {
+      return errorResponse(res, 'Product not available', 404);
+    }
+    successResponse(res, { product });
+  } catch (error) {
     errorResponse(res, error.message, 500);
   }
 };
@@ -35,7 +59,13 @@ const searchProducts = async (req, res) => {
       ];
     }
 
-    if (category) query.category = category;
+    if (category) {
+      const categoryId = await resolveCategoryFilter(category);
+      if (!categoryId) {
+        return successResponse(res, { products: [], totalPages: 0, currentPage: page, total: 0 });
+      }
+      query.category = categoryId;
+    }
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
@@ -44,6 +74,7 @@ const searchProducts = async (req, res) => {
 
     const products = await Product.find(query)
       .populate('shopId')
+      .populate('category', 'name')
       .sort('-createdAt')
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -64,5 +95,6 @@ const searchProducts = async (req, res) => {
 
 module.exports = {
   getCategories,
+  getProductById,
   searchProducts,
 };

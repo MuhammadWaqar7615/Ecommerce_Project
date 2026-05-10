@@ -58,52 +58,57 @@ const Cart = () => {
         <div className="lg:w-2/3">
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="divide-y">
-              {cart.items.map((item) => (
-                <div key={item.productId._id} className="p-4 flex gap-4">
-                  <div className="w-24 h-24 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                    {item.productId.images?.[0] ? (
-                      <img src={item.productId.images[0]} alt={item.productId.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs">No img</div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-grow">
-                    <Link to={`/products/${item.productId._id}`} className="font-semibold hover:text-primary">
-                      {item.productId.name}
-                    </Link>
-                    <p className="text-gray-500 text-sm">{item.productId.category}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center border rounded">
+              {cart.items.map((item) => {
+                const product = item.productId || {};
+                const productId = product._id || item.productId || item._id;
+
+                return (
+                  <div key={productId} className="p-4 flex gap-4">
+                    <div className="w-24 h-24 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                      {product.images?.[0] ? (
+                        <img src={product.images[0]} alt={product.name || 'Product'} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs">No img</div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-grow">
+                      <Link to={`/products/${productId}`} className="font-semibold hover:text-primary">
+                        {product.name || 'Unknown product'}
+                      </Link>
+                      <p className="text-gray-500 text-sm">{product.category || 'Unknown category'}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <div className="flex items-center border rounded">
+                          <button
+                            onClick={() => updateQuantity(productId, item.quantity - 1)}
+                            className="px-3 py-1 hover:bg-gray-100"
+                          >
+                            -
+                          </button>
+                          <span className="px-4 py-1">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(productId, item.quantity + 1)}
+                            className="px-3 py-1 hover:bg-gray-100"
+                          >
+                            +
+                          </button>
+                        </div>
                         <button
-                          onClick={() => updateQuantity(item.productId._id, item.quantity - 1)}
-                          className="px-3 py-1 hover:bg-gray-100"
+                          onClick={() => removeItemFromCart(productId)}
+                          className="text-red-500 hover:text-red-700"
                         >
-                          -
-                        </button>
-                        <span className="px-4 py-1">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.productId._id, item.quantity + 1)}
-                          className="px-3 py-1 hover:bg-gray-100"
-                        >
-                          +
+                          <FaTrash />
                         </button>
                       </div>
-                      <button
-                        onClick={() => removeItemFromCart(item.productId._id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FaTrash />
-                      </button>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="font-semibold">{formatPrice(item.priceAtAdd * item.quantity)}</p>
+                      <p className="text-sm text-gray-500">{formatPrice(item.priceAtAdd)} each</p>
                     </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <p className="font-semibold">{formatPrice(item.priceAtAdd * item.quantity)}</p>
-                    <p className="text-sm text-gray-500">{formatPrice(item.priceAtAdd)} each</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           

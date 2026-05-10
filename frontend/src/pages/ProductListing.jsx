@@ -3,11 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/common/ProductCard';
 import Loader from '../components/common/AnimatedLoader';
 import { getProducts, getCategories } from '../services/product';
-import { PRODUCT_CATEGORIES } from '../utils/constants';
 
 const ProductListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +21,27 @@ const ProductListing = () => {
   useEffect(() => {
     fetchProducts();
   }, [filters, currentPage]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      const categoryList = data.categories || [];
+      setCategories(categoryList);
+
+      if (filters.category && !/^[0-9a-fA-F]{24}$/.test(filters.category)) {
+        const matching = categoryList.find((cat) => cat.name.toLowerCase() === filters.category.toLowerCase() || cat.slug === filters.category.toLowerCase());
+        if (matching) {
+          setFilters((prev) => ({ ...prev, category: matching._id }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -76,8 +97,8 @@ const ProductListing = () => {
                 className="input-field"
               >
                 <option value="">All Categories</option>
-                {PRODUCT_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categories.map(cat => (
+                  <option key={cat._id} value={cat._id}>{cat.name}</option>
                 ))}
               </select>
             </div>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Package } from 'lucide-react';
-import { getAllCategories, updateCategory, deleteCategory } from '../../services/admin';
+import { getAllCategories, addCategory, updateCategory, deleteCategory } from '../../services/admin';
 
 const CategoryManagement = () => {
     const [categories, setCategories] = useState([]);
+    const [newCategory, setNewCategory] = useState('');
+    const [creating, setCreating] = useState(false);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
@@ -20,6 +22,21 @@ const CategoryManagement = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCreateCategory = async () => {
+        if (!newCategory.trim()) return;
+        setCreating(true);
+        try {
+            await addCategory({ name: newCategory.trim() });
+            setNewCategory('');
+            await fetchCategories();
+            alert('Category created successfully!');
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -54,8 +71,29 @@ const CategoryManagement = () => {
     return (
         <div>
             <div className="mb-6">
-                <h2 className="text-xl font-bold">Category Management</h2>
-                <p className="text-sm text-gray-500">Vendors can create new categories when adding products</p>
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold">Category Management</h2>
+                        <p className="text-sm text-gray-500">Manage categories for vendors to assign to products.</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <input
+                            type="text"
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            placeholder="New category name"
+                            className="input-field w-full sm:w-72"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleCreateCategory}
+                            disabled={creating || !newCategory.trim()}
+                            className="btn-primary w-full sm:w-auto"
+                        >
+                            {creating ? 'Creating...' : 'Add Category'}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {categories.length === 0 ? (

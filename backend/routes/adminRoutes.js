@@ -10,6 +10,7 @@ const {
   suspendUser,
   deleteUser,
   getAllCategories,
+  createCategory,
   updateCategory,
   deleteCategory,
   getAllProducts,
@@ -35,6 +36,7 @@ router.delete('/users/:id', deleteUser);
 
 // Category Management
 router.get('/categories', getAllCategories);
+router.post('/categories', createCategory);
 router.put('/categories/:id', updateCategory);
 router.delete('/categories/:id', deleteCategory);
 

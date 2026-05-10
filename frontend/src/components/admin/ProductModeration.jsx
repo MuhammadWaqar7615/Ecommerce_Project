@@ -91,11 +91,14 @@ const ProductModeration = () => {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(product => {
+        const categoryValue = typeof product.category === 'string' ? product.category : product.category?.name || '';
+        return (
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          categoryValue.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      });
     }
 
     // Vendor filter
@@ -108,9 +111,10 @@ const ProductModeration = () => {
 
     // Category filter
     if (categoryFilter) {
-      filtered = filtered.filter(product =>
-        product.category?.toLowerCase() === categoryFilter.toLowerCase()
-      );
+      filtered = filtered.filter(product => {
+        const categoryValue = typeof product.category === 'string' ? product.category : product.category?.name || '';
+        return categoryValue.toLowerCase() === categoryFilter.toLowerCase();
+      });
     }
 
     // Status filter
@@ -398,9 +402,9 @@ const ProductModeration = () => {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 >
                   <option value="">All Categories</option>
-                  {categories.map((cat, idx) => (
-                    <option key={idx} value={typeof cat === 'string' ? cat : cat.name}>
-                      {typeof cat === 'string' ? cat : cat.name}
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
@@ -504,7 +508,7 @@ const ProductModeration = () => {
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
                         <Tag size={12} />
-                        {product.category || 'Uncategorized'}
+                        {product.category?.name || product.category || 'Uncategorized'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -605,7 +609,7 @@ const ProductModeration = () => {
                     <div className="mb-2">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
                         <Tag size={10} />
-                        {product.category || 'Uncategorized'}
+                        {product.category?.name || product.category || 'Uncategorized'}
                       </span>
                     </div>
                     <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{product.name}</h3>

@@ -20,10 +20,17 @@ const register = async (req, res) => {
 
     // Check if user exists
     const userExists = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { username }],
+      $or: [{ email: email.toLowerCase() }, ...(username ? [{ username }] : [])],
     });
     if (userExists) {
-      return errorResponse(res, 'User already exists with this email or username', 400);
+      const emailConflict = userExists.email === email.toLowerCase();
+      const usernameConflict = username && userExists.username === username;
+      const message = emailConflict
+        ? 'An account with that email already exists. Please log in or use a different email.'
+        : usernameConflict
+        ? 'That username is already taken. Please choose another username.'
+        : 'An account with those details already exists.';
+      return errorResponse(res, message, 400);
     }
 
     // Generate email verification token
@@ -80,11 +87,11 @@ const sendVerificationLink = async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return errorResponse(res, 'User not found', 404);
+      return errorResponse(res, 'No account found with that email address', 404);
     }
 
     if (user.isEmailVerified) {
-      return errorResponse(res, 'Email is already verified', 400);
+      return errorResponse(res, 'Email is already verified. You can log in now.', 400);
     }
 
     // Generate new verification token
@@ -180,9 +187,10 @@ const login = async (req, res) => {
       isVendorApproved: user.isVendorApproved,
       shopId: user.shopId,
     };
-
+    console.log(userData)
     successResponse(res, { user: userData, token }, 'Login successful');
   } catch (error) {
+    console.error(error)
     errorResponse(res, error.message, 500);
   }
 };

@@ -23,7 +23,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { addProduct, updateProduct, getProductById } from '../services/vendor';
+import { addProduct, updateProduct, getProductById, getVendorCategories } from '../services/vendor';
 
 // Sortable Image Component
 const SortableImage = ({ image, index, isPrimary, onDelete }) => {
@@ -94,8 +94,6 @@ const AddEditProduct = () => {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode);
   const [categories, setCategories] = useState([]);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [showNewCategory, setShowNewCategory] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [formData, setFormData] = useState({
@@ -125,14 +123,8 @@ const AddEditProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/vendor/categories', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await response.json();
-      if (result.success) {
-        setCategories(result.data.categories || []);
-      }
+      const data = await getVendorCategories();
+      setCategories(data.categories || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -258,8 +250,6 @@ const AddEditProduct = () => {
 
   const resetForm = () => {
     setFormData({ name: '', description: '', category: '', price: '', stock: '', images: [] });
-    setNewCategoryName('');
-    setShowNewCategory(false);
   };
 
   if (pageLoading) {
@@ -325,63 +315,18 @@ const AddEditProduct = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                    {!showNewCategory ? (
-                      <div className="flex gap-2">
-                        <select
-                          name="category"
-                          required
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition"
-                          value={formData.category}
-                          onChange={handleChange}
-                        >
-                          <option value="">Select Category</option>
-                          {categories.map((cat) => (
-                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => setShowNewCategory(true)}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition whitespace-nowrap"
-                        >
-                          + New
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          placeholder="New category name"
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition"
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (newCategoryName.trim()) {
-                              setFormData({ ...formData, category: newCategoryName.trim() });
-                              setShowNewCategory(false);
-                              setNewCategoryName('');
-                            }
-                          }}
-                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-dark transition"
-                        >
-                          Add
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowNewCategory(false);
-                            setNewCategoryName('');
-                          }}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
+                    <select
+                      name="category"
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                      value={formData.category}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

@@ -7,10 +7,12 @@ const handleStripeWebhook = async (req, res) => {
   let event;
 
   try {
+    // Get webhook secret and construct event
+    const webhookSecret = stripe.getWebhookSecret();
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      webhookSecret
     );
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err.message}`);
@@ -37,6 +39,7 @@ const handleStripeWebhook = async (req, res) => {
 };
 
 const handlePaymentSuccess = async (paymentIntent) => {
+  console.log('Payment succeeded for intent:', paymentIntent.id);
   const orderId = paymentIntent.metadata.orderId;
   const order = await Order.findById(orderId).populate('customerId');
 
@@ -51,6 +54,7 @@ const handlePaymentSuccess = async (paymentIntent) => {
 };
 
 const handlePaymentFailure = async (paymentIntent) => {
+  console.log('Payment failed for intent:', paymentIntent.id);
   const orderId = paymentIntent.metadata.orderId;
   const order = await Order.findById(orderId);
 

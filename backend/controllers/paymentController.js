@@ -3,11 +3,21 @@ const Order = require('../models/Order');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { refundPayment } = require('../services/stripeService');
 
+// Get Stripe Public Key (for frontend)
+const getPublicKey = async (req, res) => {
+  try {
+    const publicKey = stripe.getPublicKey();
+    successResponse(res, { publicKey }, 'Public key retrieved successfully');
+  } catch (error) {
+    errorResponse(res, error.message, 500);
+  }
+};
+
 // Create payment intent
 const createPaymentIntent = async (req, res) => {
   try {
     const { orderId } = req.body;
-
+    console.log('Creating payment intent for order:', orderId);
     const order = await Order.findById(orderId).populate('items.productId');
     if (!order) {
       return errorResponse(res, 'Order not found', 404);
@@ -17,19 +27,10 @@ const createPaymentIntent = async (req, res) => {
       return errorResponse(res, 'Payment already processed', 400);
     }
 
-    // Get vendor's Stripe account ID
-    const vendor = await User.findById(order.items[0].shopId.vendorId);
-    if (!vendor || !vendor.stripeAccountId) {
-      return errorResponse(res, 'Vendor payment setup incomplete', 400);
-    }
-
+    // Create payment intent - all payments go to platform account
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(order.totalAmount * 100),
       currency: 'pkr',
-      application_fee_amount: Math.round(order.adminCommission * 100),
-      transfer_data: {
-        destination: vendor.stripeAccountId,
-      },
       metadata: {
         orderId: order._id.toString(),
         orderNumber: order.orderNumber,
@@ -77,6 +78,7 @@ const processRefund = async (req, res) => {
 };
 
 module.exports = {
+  getPublicKey,
   createPaymentIntent,
   processRefund,
 };

@@ -1,14 +1,10 @@
 const stripe = require('../config/stripe');
 
-const createPaymentIntent = async (amount, vendorStripeAccountId, adminCommission, orderId) => {
+const createPaymentIntent = async (amount, orderId) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents/paisa
       currency: 'pkr',
-      application_fee_amount: Math.round(adminCommission * 100),
-      transfer_data: {
-        destination: vendorStripeAccountId,
-      },
       metadata: {
         orderId: orderId.toString(),
       },

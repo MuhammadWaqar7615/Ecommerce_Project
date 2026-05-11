@@ -40,6 +40,7 @@ import CustomerOrderDetail from './pages/CustomerOrderDetail';
 import CategoryManagement from './components/admin/CategoryManagement';
 import AddEditProduct from './pages/AddEditProduct';
 import AuthCallback from './pages/AuthCallback';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -118,6 +119,11 @@ function AppContent() {
           <Route path="/checkout" element={
             <ProtectedRoute allowedRoles={['customer']}>
               <Checkout />
+            </ProtectedRoute>
+          } />
+          <Route path="/payment-success" element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <PaymentSuccess />
             </ProtectedRoute>
           } />
           <Route path="/customer/dashboard" element={

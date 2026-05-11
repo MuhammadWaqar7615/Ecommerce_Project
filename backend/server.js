@@ -12,6 +12,15 @@ connectDB();
 const app = express();
 
 app.use(cors());
+
+// Stripe webhook needs raw body BEFORE JSON parsing middleware
+// Mount webhook routes with raw body parser
+const webhookRouter = express.Router();
+webhookRouter.use(express.raw({type: 'application/json'}));
+webhookRouter.use(require('./routes/webhookRoutes'));
+app.use('/api/webhook', webhookRouter);
+
+// JSON parsing for other routes
 app.use(express.json());
 
 // Initialize Passport middleware
@@ -24,7 +33,7 @@ app.use('/api/vendor', require('./routes/vendorRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/public', require('./routes/publicRoutes'));
 app.use('/api/password', require('./routes/passwordRoutes'));
-app.use('/api/webhook', require('./routes/webhookRoutes'));
+app.use('/api/payment', require('./routes/paymentRoutes'));
 
 // Auth error handler
 app.get('/auth-error', (req, res) => {

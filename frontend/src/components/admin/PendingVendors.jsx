@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getPendingVendors, approveVendor, suspendVendor } from '../../services/admin';
 
 const PendingVendors = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [openId, setOpenId] = useState(null);
 
   useEffect(() => {
     fetchVendors();
@@ -34,8 +35,8 @@ const PendingVendors = () => {
     }
   };
 
-  const handleSuspend = async (vendorId) => {
-    if (!confirm('Are you sure you want to suspend this vendor?')) return;
+  const handleReject = async (vendorId) => {
+    if (!confirm('Are you sure you want to reject this vendor?')) return;
     setProcessingId(vendorId);
     try {
       await suspendVendor(vendorId);
@@ -47,56 +48,108 @@ const PendingVendors = () => {
     }
   };
 
+  const toggleAccordion = (id) => {
+    setOpenId(openId === id ? null : id);
+  };
+
   if (loading) {
-    return <div className="text-center py-10">Loading vendors...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   if (vendors.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500">
-        <p>No pending vendor registrations</p>
-        <p className="text-sm mt-2">All vendors have been reviewed</p>
+      <div className="text-center py-16">
+        <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <CheckCircle size={40} className="text-green-500" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-700 mb-2">No Pending Vendors</h3>
+        <p className="text-gray-500">All vendor registrations have been reviewed</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Pending Vendor Approvals</h2>
-      <p className="text-gray-600 mb-6">{vendors.length} vendor(s) waiting for approval</p>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Pending Vendor Approvals</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          {vendors.length} vendor{vendors.length !== 1 ? 's' : ''} waiting for review
+        </p>
+      </div>
 
       <div className="space-y-4">
         {vendors.map((vendor) => (
-          <div key={vendor._id} className="border rounded-lg p-4 hover:shadow-md transition">
-            <div className="flex justify-between items-start">
+          <div key={vendor._id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            {/* Accordion Header - Theme Background */}
+            <div
+              className="p-4 cursor-pointer transition flex justify-between items-center bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10"
+              onClick={() => toggleAccordion(vendor._id)}
+            >
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{vendor.fullName}</h3>
-                <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                  <p><span className="text-gray-500">Username:</span> {vendor.username}</p>
-                  <p><span className="text-gray-500">Email:</span> {vendor.email}</p>
-                  <p><span className="text-gray-500">Phone:</span> {vendor.phone}</p>
-                  <p><span className="text-gray-500">Registered:</span> {new Date(vendor.createdAt).toLocaleDateString()}</p>
-                </div>
+                <h3 className="font-semibold text-lg text-gray-800">{vendor.fullName}</h3>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleApprove(vendor._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApprove(vendor._id);
+                  }}
                   disabled={processingId === vendor._id}
-                  className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 text-sm"
                 >
-                  <CheckCircle size={16} />
+                  <CheckCircle size={15} />
                   Approve
                 </button>
                 <button
-                  onClick={() => handleSuspend(vendor._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReject(vendor._id);
+                  }}
                   disabled={processingId === vendor._id}
-                  className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 text-sm"
                 >
-                  <XCircle size={16} />
+                  <XCircle size={15} />
                   Reject
                 </button>
+                {openId === vendor._id ? (
+                  <ChevronUp size={20} className="text-gray-500" />
+                ) : (
+                  <ChevronDown size={20} className="text-gray-500" />
+                )}
               </div>
             </div>
+
+            {/* Accordion Body */}
+            {openId === vendor._id && (
+              <div className="border-t border-gray-100 p-4 bg-white">
+                <div className="flex justify-between  gap-3 text-sm">
+                  <div className="flex flex-col py-2 border-b border-gray-50">
+                    <div className='flex justify-start gap-1'>
+                      <span className="text-gray-500">Username:</span>
+                      <span className="font-medium text-gray-700">{vendor.username}</span>
+                    </div>
+                    <div className='flex justify-start gap-1'>
+                      <span className="text-gray-500">Email:</span>
+                      <span className="font-medium text-gray-700">{vendor.email}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col py-2 border-b border-gray-50">
+                    <div className='flex justify-between gap-1'>
+                      <span className="text-gray-500">Phone:</span>
+                      <span className="font-medium text-gray-700">{vendor.phone}</span>
+                    </div>
+                    <div className='flex justify-between gap-1'>
+                      <span className="text-gray-500">Registered:</span>
+                      <span className="font-medium text-gray-700">{new Date(vendor.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

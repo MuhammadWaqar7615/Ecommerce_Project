@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
+import InputDefaults from './components/common/InputDefaults';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Home from './pages/Home';
@@ -97,6 +98,7 @@ const VendorLayout = () => {
 function AppContent() {
   return (
     <>
+      <InputDefaults />
       <main className="min-h-screen">
         <Routes>
           {/* Public Routes */}

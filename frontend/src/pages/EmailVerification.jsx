@@ -83,106 +83,45 @@ const EmailVerification = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Email Verification
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Please verify your email to complete registration
-          </p>
-        </div>
-
-        {verifying && (
-          <div className="rounded-md bg-blue-50 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm font-medium text-blue-800">
-                  Verifying your email...
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen auth-hero">
+      <div className="min-h-screen flex items-center">
+        <div className="mx-auto w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-12 px-4">
+          <div className="hidden md:block auth-panel-left text-white">
+            <p className="uppercase text-sm tracking-widest text-white/80">Crafts & Delights</p>
+            <h1 className="mt-6 text-4xl font-extrabold">Email verification</h1>
+            <p className="mt-4 text-lg text-white/90">Verify your email to unlock full access to the marketplace.</p>
           </div>
-        )}
 
-        {message && (
-          <div className="rounded-md bg-green-50 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">{message}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm font-medium text-red-800">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!verifying && !token && (
-          <form className="mt-8 space-y-6" onSubmit={handleResendEmail}>
-            <div className="rounded-md shadow-sm -space-y-px">
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
+          <div className="mx-auto w-full max-w-md auth-card p-8">
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {loading ? 'Sending...' : 'Resend Verification Email'}
-              </button>
+              <h2 className="text-2xl font-extrabold text-gray-900 text-center">Email Verification</h2>
+              <p className="mt-2 text-center text-sm text-gray-600">Please verify your email to complete registration</p>
             </div>
 
-            <div className="text-center text-sm text-gray-600">
-              <p>
-                Already verified?{' '}
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="text-blue-600 hover:text-blue-500 font-medium"
-                >
-                  Log in here
-                </button>
-              </p>
-            </div>
-          </form>
-        )}
+            {verifying && (<div className="rounded-md bg-blue-50 p-4"><div className="flex"><div className="ml-3"><p className="text-sm font-medium text-blue-800">Verifying your email...</p></div></div></div>)}
+            {message && (<div className="rounded-md bg-green-50 p-4"><div className="flex"><div className="ml-3"><p className="text-sm font-medium text-green-800">{message}</p></div></div></div>)}
+            {error && (<div className="rounded-md bg-red-50 p-4"><div className="flex"><div className="ml-3"><p className="text-sm font-medium text-red-800">{error}</p></div></div></div>)}
 
-        {message && token && (
-          <div className="text-center text-sm text-gray-600">
-            <button
-              onClick={() => navigate('/login')}
-              className="text-blue-600 hover:text-blue-500 font-medium"
-            >
-              Go to Login
-            </button>
+            {!verifying && !token && (
+              <form className="mt-6 space-y-4" onSubmit={handleResendEmail}>
+                <div>
+                  <label htmlFor="email" className="sr-only">Email address</label>
+                  <input id="email" name="email" type="email" autoComplete="email" required className="input-field" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
+                </div>
+
+                <div>
+                  <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Sending...' : 'Resend Verification Email'}</button>
+                </div>
+
+                <div className="text-center text-sm text-gray-600">
+                  <p>Already verified? <button type="button" onClick={() => navigate('/login')} className="text-primary hover:underline font-medium">Log in here</button></p>
+                </div>
+              </form>
+            )}
+
+            {message && token && (<div className="text-center text-sm text-gray-600"><button onClick={() => navigate('/login')} className="text-primary hover:underline font-medium">Go to Login</button></div>)}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

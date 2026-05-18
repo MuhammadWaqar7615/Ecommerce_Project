@@ -46,6 +46,32 @@
   }
 }
 
+  @layer components {
+    .section {
+      @apply py-16;
+    }
+
+    .section-title {
+      @apply text-3xl font-bold text-gray-800;
+    }
+
+    .newsletter-card {
+      @apply bg-white rounded-2xl shadow-lg p-6 md:p-8 max-w-2xl mx-auto flex flex-col md:flex-row items-center gap-4;
+    }
+
+    .newsletter-input {
+      @apply flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition;
+    }
+
+    .newsletter-cta {
+      @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-dark transition;
+    }
+
+    .small-muted {
+      @apply text-sm text-gray-500;
+    }
+  }
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -89,4 +115,59 @@ body {
 
 .hover\:bg-primary\/10:hover {
   background-color: rgba(139, 94, 60, 0.1);
+}
+
+/* Auth hero background and layout */
+.auth-hero {
+  background-image: linear-gradient(rgba(11,8,6,0.35), rgba(11,8,6,0.35)), url('./assets/hero-img.png');
+  background-size: cover;
+  background-position: center center;
+}
+
+.auth-hero .auth-panel-left {
+  padding: 3rem;
+}
+
+.auth-hero .auth-panel-left h1 {
+  font-size: 2.25rem;
+  line-height: 1.05;
+  font-weight: 800;
+}
+
+.auth-hero .auth-panel-left p {
+  color: rgba(255,255,255,0.9);
+}
+
+.auth-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+}
+
+/* Global pointer cursor for interactive elements (excluding disabled controls) */
+a, a[href], button:not([disabled]), [role="button"]:not([disabled]), input[type="button"]:not([disabled]), input[type="submit"]:not([disabled]), .btn:not([disabled]), .btn-primary:not([disabled]), .btn-secondary:not([disabled]), .btn-outline:not([disabled]), .nav-link, .link, .clickable, label[for] {
+  cursor: pointer;
+}
+
+/* Ensure form controls that accept text still show text cursor */
+input[type="text"], input[type="email"], input[type="password"], textarea {
+  cursor: text;
+}
+
+/* Improve default sizing for all form controls for comfortable typing */
+input, textarea, select {
+  padding: 0.75rem 1rem;
+  min-height: 44px;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+}
+
+textarea {
+  min-height: 108px;
+}
+
+/* Make inputs expand to available width but keep comfortable max width */
+input[type="text"], input[type="email"], textarea, .input-field {
+  width: 100%;
+  max-width: 100%;
 }

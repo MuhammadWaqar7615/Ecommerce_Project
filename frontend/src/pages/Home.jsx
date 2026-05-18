@@ -93,29 +93,6 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Categories Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">Shop by Category</h2>
-              <p className="text-gray-500">Find exactly what you're looking for</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {categories.map((category) => (
-                <Link
-                  key={category.name}
-                  to={`/products?category=${category.name}`}
-                  className={`${category.color} rounded-xl p-6 text-center hover:shadow-lg transition transform hover:-translate-y-1`}
-                >
-                  <div className={`text-4xl mb-3 ${category.textColor}`}>{category.icon}</div>
-                  <h3 className={`text-xl font-bold ${category.textColor} mb-2`}>{category.name}</h3>
-                  <p className="text-gray-600 text-sm">{category.description}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Featured Products */}
         <section className="py-16">
           <div className="container mx-auto px-4">
@@ -141,22 +118,25 @@ const Home = () => {
         </section>
 
         {/* Newsletter Section */}
-        <section className="py-16 bg-primary">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Stay Updated</h2>
-            <p className="text-white/80 mb-8 max-w-md mx-auto">
-              Subscribe to get updates on new products and special offers
-            </p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
-              />
-              <button className="bg-white text-primary px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                Subscribe
-              </button>
-            </form>
+        <section className="section bg-primary/5">
+          <div className="container mx-auto px-4">
+            <div className="newsletter-card">
+              <div className="text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Stay Updated</h2>
+                <p className="text-gray-600 mt-1">Get new product launches, deals & stories — no spam.</p>
+              </div>
+
+              <form className="w-full md:w-auto flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+                <input
+                  type="email"
+                  placeholder="Your email address"
+                  className="newsletter-input"
+                />
+                <button className="newsletter-cta">Subscribe</button>
+              </form>
+            </div>
+
+            <p className="mt-3 text-center small-muted">We respect your privacy. Unsubscribe anytime.</p>
           </div>
         </section>
       </main>

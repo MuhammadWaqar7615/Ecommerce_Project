@@ -85,7 +85,6 @@ const PasswordReset = () => {
       setLoading(false);
     }
   };
-
   if (step === 'request') {
     return (
       <div className="min-h-screen auth-hero">

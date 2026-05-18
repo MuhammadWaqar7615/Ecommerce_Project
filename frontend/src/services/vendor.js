@@ -104,7 +104,7 @@ export const uploadProductImage = async (file) => {
     formData.append('image', file);
 
     const token = localStorage.getItem('token');
-    const response = await fetch('http://localhost:5000/api/vendor/upload-image', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/vendor/upload-image`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`

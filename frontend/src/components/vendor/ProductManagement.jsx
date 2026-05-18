@@ -165,7 +165,7 @@ const ProductManagement = () => {
     const fetchCategories = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/vendor/categories', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/vendor/categories`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const result = await response.json();

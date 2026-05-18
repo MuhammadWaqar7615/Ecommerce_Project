@@ -182,7 +182,7 @@ const ProductModeration = () => {
     try {
       const token = localStorage.getItem('token');
       // Fetch vendors
-      const vendorsResponse = await fetch('http://localhost:5000/api/admin/vendors', {
+      const vendorsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/vendors`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const vendorsResult = await vendorsResponse.json();
@@ -191,7 +191,7 @@ const ProductModeration = () => {
       }
 
       // Fetch categories
-      const categoriesResponse = await fetch('http://localhost:5000/api/admin/categories', {
+      const categoriesResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/categories`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const categoriesResult = await categoriesResponse.json();

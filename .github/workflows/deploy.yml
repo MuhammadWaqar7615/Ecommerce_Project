@@ -1,0 +1,57 @@
+name: Node.js Remote Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: SSH into Ubuntu Server and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22 
+          script: |
+            # Exit immediately if a command exits with a non-zero status
+            set -e
+
+            echo "=================================================="
+            echo "🚀 STARTING DEPLOYMENT PIPELINE"
+            echo "=================================================="
+
+            echo "📂 Step 1: Navigating to project directory..."
+            # CHANGE THIS to your actual project path on the server
+            cd Ecommerce_Project/backend
+            echo "📍 Current directory: $(pwd)"
+
+            echo "--------------------------------------------------"
+            echo "🔄 Step 2: Fetching updates and resetting branch..."
+            git fetch origin main
+            git reset --hard origin/main
+            echo "✅ Code updated to latest commit: $(git log -1 --oneline)"
+
+            # echo "--------------------------------------------------"
+            # echo "📦 Step 3: Installing production dependencies..."
+            # npm ci --production
+
+            echo "--------------------------------------------------"
+            echo "🔄 Step 4: Restarting PM2 process..."
+            # CHANGE 'your-app-name' to your PM2 process name (or use 'all')
+            pm2 restart waqar-server
+            
+            echo "--------------------------------------------------"
+            echo "📊 Step 5: Checking PM2 status..."
+            pm2 status
+
+            echo "=================================================="
+            echo "🎉 DEPLOYMENT SUCCESSFUL!"
+            echo "=================================================="

@@ -48,6 +48,17 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// Root - return server identity so hitting base URL confirms server
+const pkg = require('./package.json');
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    server: process.env.SERVER_NAME || pkg.name || 'backend',
+    environment: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 5000,
+  });
+});
+
 app.use('/uploads', express.static('uploads'));
 
 // 404 handler

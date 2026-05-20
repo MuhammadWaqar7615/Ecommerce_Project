@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../../components/common/ProductCard';
 import Loader from '../../components/common/AnimatedLoader';
-import { getProducts, getCategories } from '../../services/product';
+import { getPublicProducts, getCategories } from '../../services/product';
 
 const ProductListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,7 +53,7 @@ const ProductListing = () => {
       };
       Object.keys(query).forEach(key => !query[key] && delete query[key]);
       
-      const data = await getProducts(query);
+      const data = await getPublicProducts(query);
       setProducts(data.products);
       setTotalPages(data.totalPages);
     } catch (error) {

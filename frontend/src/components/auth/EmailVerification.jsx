@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { verifyEmail, sendVerificationLink } from '../services/auth';
-import { useAuth } from '../context/AuthContext';
+import { verifyEmail, sendVerificationLink } from '../../services/auth';
+import { useAuth } from '../../context/AuthContext';
 
 const EmailVerification = () => {
   const navigate = useNavigate();

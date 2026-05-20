@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../components/common/DashboardLayout';
-import { getOrders } from '../services/order';
-import { formatPrice } from '../utils/formatPrice';
-import { ORDER_STATUS_COLORS } from '../utils/constants';
+import DashboardLayout from '../../components/common/DashboardLayout';
+import { getOrders } from '../../services/order';
+import { formatPrice } from '../../utils/formatPrice';
+import { ORDER_STATUS_COLORS } from '../../utils/constants';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Package, DollarSign, Clock } from 'lucide-react';
 

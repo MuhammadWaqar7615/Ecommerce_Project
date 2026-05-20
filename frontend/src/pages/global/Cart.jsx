@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/common/DashboardLayout';
-import { useCart } from '../context/CartContext';
-import { formatPrice } from '../utils/formatPrice';
+import DashboardLayout from '../../components/common/DashboardLayout';
+import { useCart } from '../../context/CartContext';
+import { formatPrice } from '../../utils/formatPrice';
 import { FaTrash } from 'react-icons/fa';
 
 const Cart = () => {

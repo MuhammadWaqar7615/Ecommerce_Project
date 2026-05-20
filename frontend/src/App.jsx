@@ -8,19 +8,20 @@ import Footer from './components/common/Footer';
 import InputDefaults from './components/common/InputDefaults';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-import Home from './pages/Home';
-import ProductListing from './pages/ProductListing';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import CustomerDashboard from './pages/CustomerDashboard';
-import VendorDashboard from './pages/VendorDashboard';
-import AdminDashboard from './pages/AdminDashboard';
+import Home from './pages/global/Home';
+import ProductListing from './pages/global/ProductListing';
+import ProductDetail from './pages/global/ProductDetail';
+import Cart from './pages/global/Cart';
+import Checkout from './pages/global/Checkout';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import CustomerOrders from './pages/customer/CustomerOrders';
+import CustomerProfile from './pages/customer/CustomerProfile';
+import CustomerOrderDetail from './pages/customer/CustomerOrderDetail';
+import VendorDashboard from './pages/vendor/VendorDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import ForgotPassword from './components/auth/ForgotPassword';
-import EmailVerification from './pages/EmailVerification';
-import PasswordReset from './pages/PasswordReset';
-import CustomerOrders from './pages/CustomerOrders';
-import CustomerProfile from './pages/CustomerProfile';
+import EmailVerification from './components/auth/EmailVerification';
+import PasswordReset from './components/auth/PasswordReset';
 import { LoadingProvider } from './context/LoadingContext';
 
 // Import Admin Components
@@ -37,11 +38,10 @@ import ProductManagement from './components/vendor/ProductManagement';
 // import ProductManagement from './components/vendor/productManagement/ProductManagement';
 import OrderManagementVendor from './components/vendor/OrderManagementVendor';
 import RevenueAnalytics from './components/vendor/RevenueAnalytics';
-import CustomerOrderDetail from './pages/CustomerOrderDetail';
 import CategoryManagement from './components/admin/CategoryManagement';
-import AddEditProduct from './pages/AddEditProduct';
-import AuthCallback from './pages/AuthCallback';
-import PaymentSuccess from './pages/PaymentSuccess';
+import AddEditProduct from './pages/vendor/AddEditProduct';
+import AuthCallback from './components/auth/callbacks/AuthCallback';
+import PaymentSuccess from './pages/global/PaymentSuccess';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();

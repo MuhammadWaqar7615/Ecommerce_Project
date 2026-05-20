@@ -23,7 +23,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { addProduct, updateProduct, getProductById, getVendorCategories } from '../services/vendor';
+import { addProduct, updateProduct, getProductById, getVendorCategories } from '../../services/vendor';
 
 // Sortable Image Component
 const SortableImage = ({ image, index, isPrimary, onDelete }) => {

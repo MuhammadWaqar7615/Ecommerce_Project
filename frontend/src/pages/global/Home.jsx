@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import ProductCard from '../components/common/ProductCard';
-import AnimatedLoader from '../components/common/AnimatedLoader';
-import HomeHeader from '../components/common/HomeHeader';
-import Footer from '../components/common/Footer';
-import { getProducts } from '../services/product';
+import ProductCard from '../../components/common/ProductCard';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
+import HomeHeader from '../../components/common/HomeHeader';
+import Footer from '../../components/common/Footer';
+import { getProducts } from '../../services/product';
 import { FaTruck, FaShieldAlt, FaUndo, FaHeadset, FaStar, FaArrowRight, FaLeaf, FaHands } from 'react-icons/fa';
-import HeroSlider from '../components/common/HeroSlider';
+import HeroSlider from '../../components/common/HeroSlider';
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);

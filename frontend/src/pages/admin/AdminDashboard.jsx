@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardLayout from '../components/common/DashboardLayout';
+import DashboardLayout from '../../components/common/DashboardLayout';
 
 const AdminDashboard = ({ children }) => {
   return (

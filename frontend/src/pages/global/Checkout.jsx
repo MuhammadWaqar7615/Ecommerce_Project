@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { createOrder } from '../services/order';
-import { getStripePublicKey } from '../services/payment';
-import StripePaymentForm from '../components/common/StripePaymentForm';
-import { formatPrice } from '../utils/formatPrice';
+import { useCart } from '../../context/CartContext';
+import { createOrder } from '../../services/order';
+import { getStripePublicKey } from '../../services/payment';
+import StripePaymentForm from '../../components/common/StripePaymentForm';
+import { formatPrice } from '../../utils/formatPrice';
 
 const Checkout = () => {
   const { cart, loadCart, loading: cartLoading } = useCart();

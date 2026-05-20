@@ -119,7 +119,7 @@ body {
 
 /* Auth hero background and layout */
 .auth-hero {
-  background-image: linear-gradient(rgba(11,8,6,0.35), rgba(11,8,6,0.35)), url('./assets/hero-img.png');
+  background-image: linear-gradient(rgba(11,8,6,0.35), rgba(11,8,6,0.35)), url('./assets/hero-img.webp');
   background-size: cover;
   background-position: center center;
 }

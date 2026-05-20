@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { resetPasswordWithLink, sendPasswordResetLink } from '../services/auth';
+import { resetPasswordWithLink, sendPasswordResetLink } from '../../services/auth';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const PasswordReset = () => {

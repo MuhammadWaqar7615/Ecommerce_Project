@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import DashboardLayout from '../components/common/DashboardLayout';
-import { validateEmail, validatePhone } from '../utils/validateForm';
+import { useAuth } from '../../context/AuthContext';
+import DashboardLayout from '../../components/common/DashboardLayout';
+import { validateEmail, validatePhone } from '../../utils/validateForm';
 import { User, Mail, Phone, MapPin, Save } from 'lucide-react';
 
 const CustomerProfile = () => {

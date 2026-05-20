@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import Loader from '../components/common/AnimatedLoader';
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/common/Footer';
-import { getProductById } from '../services/product';
-import { formatPrice } from '../utils/formatPrice';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import Loader from '../../components/common/AnimatedLoader';
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/common/Footer';
+import { getProductById } from '../../services/product';
+import { formatPrice } from '../../utils/formatPrice';
 
 const ProductDetail = () => {
   const { id } = useParams();

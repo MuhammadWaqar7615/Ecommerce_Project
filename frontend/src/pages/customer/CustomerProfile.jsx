@@ -170,6 +170,7 @@ const CustomerProfile = () => {
                   placeholder="House #, Street, Area"
                 />
               </div>
+              
               <div>
                 <label className="block text-sm font-medium mb-1">City</label>
                 <input
@@ -180,7 +181,7 @@ const CustomerProfile = () => {
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">District</label>
                 <input

@@ -58,7 +58,6 @@ const CustomerDashboard = () => {
 
   return (
     <DashboardLayout title="My Dashboard" subtitle="Welcome to your dashboard">
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-6">
           <div className="flex items-center justify-between">

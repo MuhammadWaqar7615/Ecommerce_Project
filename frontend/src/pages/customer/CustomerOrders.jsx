@@ -74,6 +74,7 @@ const CustomerOrders = () => {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <ShoppingBag className="mx-auto mb-4 text-gray-400" size={48} />
           <p className="text-gray-500">No orders found.</p>
+          
           <Link to="/products" className="btn-primary inline-block mt-4">
             Start Shopping
           </Link>

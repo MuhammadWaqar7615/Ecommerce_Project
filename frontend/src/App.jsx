@@ -24,7 +24,6 @@ import EmailVerification from './components/auth/EmailVerification';
 import PasswordReset from './components/auth/PasswordReset';
 import { LoadingProvider } from './context/LoadingContext';
 
-// Import Admin Components
 import PendingVendors from './components/admin/PendingVendors';
 import UserManagement from './components/admin/UserManagement';
 import ProductModeration from './components/admin/ProductModeration';

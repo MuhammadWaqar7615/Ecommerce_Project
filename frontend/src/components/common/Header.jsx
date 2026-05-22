@@ -35,6 +35,7 @@ const getDisplayName = (user) => user?.fullName?.split(' ')[0] || 'User';
 const Header = ({
   variant = 'dashboard',
   onMenuClick,
+  headerRef,
   position = 'fixed',
   showSearch = false,
   showProductsLink = false,
@@ -90,7 +91,7 @@ const Header = ({
 
   if (isDashboard) {
     return (
-      <header className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
+      <header ref={headerRef} className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
         <div className="flex items-center justify-between px-4 md:px-6 py-1">
           <div className="flex items-center gap-3 md:gap-4">
             <button

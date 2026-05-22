@@ -67,9 +67,12 @@ const HomeHeader = () => {
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between py-3">
                     {/* Logo */}
-                    <Link to="/" className="text-xl md:text-2xl font-bold text-white">
-                        Crafts & Delights
-                    </Link>
+                    <span className='flex items-center gap-2 text-white'>
+                        <Link to="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-white">
+                            <img src="/logo.svg" alt="Logo" width={48} height={48} />
+                            Crafts & Delights
+                        </Link>
+                    </span>
 
                     {/* Right Section */}
                     <div className="flex items-center gap-3">

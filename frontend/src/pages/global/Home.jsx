@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ProductCard from '../../components/common/ProductCard';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
-import HomeHeader from '../../components/common/HomeHeader';
+import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
 import { getProducts } from '../../services/product';
 import { FaTruck, FaShieldAlt, FaUndo, FaHeadset, FaStar, FaArrowRight, FaLeaf, FaHands } from 'react-icons/fa';
@@ -51,7 +51,14 @@ const Home = () => {
 
   return (
     <>
-      <HomeHeader />
+      <Header
+        variant="public"
+        showSearch
+        showCart
+        cartVisibility="always"
+        showMobileMenu={false}
+        logoutRedirectTo="/login"
+      />
       
       <main>
         {/* Hero Section */}

@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
-import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import InputDefaults from './components/common/InputDefaults';
 import Login from './components/auth/Login';

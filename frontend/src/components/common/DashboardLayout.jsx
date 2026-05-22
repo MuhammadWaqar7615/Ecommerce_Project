@@ -11,7 +11,7 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <Header variant="dashboard" onMenuClick={() => setSidebarOpen(!sidebarOpen)} logoutRedirectTo="/login" />
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
       <main className={`pt-16 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <div className="p-4 md:p-6">

@@ -9,7 +9,7 @@ const VendorDashboard = ({ children }) => {
     >
       <div className="bg-white rounded-lg shadow-lg p-6">
         {children}
-        hello
+        hello world
       </div>
     </DashboardLayout>
   );

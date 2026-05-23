@@ -9,7 +9,7 @@ const VendorDashboard = ({ children }) => {
     >
       <div className="bg-white rounded-lg shadow-lg p-6">
         {children}
-        hello world
+        Hey, This is Vendor Dashboard. You can manage your shop, products, orders and track revenue here.
       </div>
     </DashboardLayout>
   );

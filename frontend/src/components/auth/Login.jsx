@@ -147,7 +147,7 @@ const Login = () => {
 
                 <div className="text-center text-xs text-gray-400 border-t pt-4">
                   <p>Demo Accounts (after email verification):</p>
-                  <p>Admin: admin@craftsdelights.com / admin123</p>
+                  <p>Admin: admin@craftsdelights.com / use current password from backend seedAdmin</p>
                   <p>Vendor: vendor@test.com / 123456</p>
                   <p>Customer: test@example.com / 123456</p>
                 </div>

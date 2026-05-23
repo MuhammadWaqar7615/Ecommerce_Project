@@ -31,7 +31,7 @@ The seeder system provides a modular way to initialize and populate the database
 - **Location**: In `run.js`
 - **Credentials**:
   - Email: `admin@craftsdelights.com`
-  - Password: `admin123`
+  - Password: `hello@123`
 - **Auto-created** if not exists
 
 #### 3. Settings Seeder

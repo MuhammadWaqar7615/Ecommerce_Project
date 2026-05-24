@@ -1,18 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Package } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import { Edit, Trash2, Plus, Search, X, ChevronDown, ChevronLeft, ChevronRight, Package, TrendingUp } from 'lucide-react';
 import { getAllCategories, addCategory, updateCategory, deleteCategory } from '../../services/admin';
 
 const CategoryManagement = () => {
     const [categories, setCategories] = useState([]);
-    const [newCategory, setNewCategory] = useState('');
-    const [creating, setCreating] = useState(false);
+    const [filteredCategories, setFilteredCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
+    const [newCategory, setNewCategory] = useState('');
+    const [creating, setCreating] = useState(false);
+
+    // Save scroll position
+    const saveScrollPosition = useCallback(() => {
+        sessionStorage.setItem('categoryListScrollY', window.scrollY);
+        sessionStorage.setItem('categoryListState', JSON.stringify({
+            currentPage,
+            searchTerm,
+            sortBy,
+            scrollY: window.scrollY
+        }));
+    }, [currentPage, searchTerm, sortBy]);
+
+    // Restore scroll position
+    useEffect(() => {
+        const savedState = sessionStorage.getItem('categoryListState');
+        const savedScrollY = sessionStorage.getItem('categoryListScrollY');
+
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            setCurrentPage(state.currentPage || 1);
+            setSearchTerm(state.searchTerm || '');
+            setSortBy(state.sortBy || 'newest');
+
+            if (savedScrollY) {
+                setTimeout(() => {
+                    window.scrollTo({ top: parseInt(savedScrollY), behavior: 'instant' });
+                }, 100);
+            }
+        }
+
+        return () => {
+            sessionStorage.removeItem('categoryListState');
+            sessionStorage.removeItem('categoryListScrollY');
+        };
+    }, []);
 
     useEffect(() => {
         fetchCategories();
     }, []);
+
+    // Apply filters and sorting
+    useEffect(() => {
+        let filtered = [...categories];
+
+        if (searchTerm) {
+            filtered = filtered.filter(cat =>
+                cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'newest':
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                case 'oldest':
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                case 'name_asc':
+                    return a.name.localeCompare(b.name);
+                case 'name_desc':
+                    return b.name.localeCompare(a.name);
+                default:
+                    return 0;
+            }
+        });
+
+        setFilteredCategories(filtered);
+        setCurrentPage(1);
+    }, [categories, searchTerm, sortBy]);
 
     const fetchCategories = async () => {
         try {
@@ -20,6 +91,7 @@ const CategoryManagement = () => {
             setCategories(data.categories || []);
         } catch (error) {
             console.error(error);
+            toast.error('Failed to load categories');
         } finally {
             setLoading(false);
         }
@@ -32,9 +104,9 @@ const CategoryManagement = () => {
             await addCategory({ name: newCategory.trim() });
             setNewCategory('');
             await fetchCategories();
-            alert('Category created successfully!');
+            toast.success('Category created successfully!');
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         } finally {
             setCreating(false);
         }
@@ -45,135 +117,363 @@ const CategoryManagement = () => {
         try {
             await updateCategory(id, { name: newName.trim() });
             setEditingId(null);
+            setEditName('');
             await fetchCategories();
-            alert('Category updated successfully!');
+            toast.success('Category updated successfully!');
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message);
         }
     };
 
     const handleDelete = async (id, name) => {
-        if (confirm(`Delete category "${name}"? This will NOT delete products, but products will lose this category.`)) {
+        if (confirm(`⚠️ Delete category "${name}"?\n\nProducts using this category will become "Uncategorized". This action cannot be undone!`)) {
             try {
                 await deleteCategory(id);
                 await fetchCategories();
-                alert('Category deleted successfully!');
+                toast.success('Category deleted successfully!');
             } catch (error) {
-                alert(error.message);
+                toast.error(error.message);
             }
         }
     };
 
+    const clearFilters = () => {
+        setSearchTerm('');
+        setSortBy('newest');
+        setIsFilterOpen(false);
+        toast.info('All filters cleared');
+    };
+
+    const hasActiveFilters = searchTerm || sortBy !== 'newest';
+
+    const totalCategories = categories.length;
+    const recentCategories = categories.filter(cat => {
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return new Date(cat.createdAt) > weekAgo;
+    }).length;
+
+    // Pagination
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentCategories = filteredCategories.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+
+    const goToPage = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     if (loading) {
-        return <div className="text-center py-10">Loading categories...</div>;
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
     }
 
+    const FilterIcon = ({ size, className }) => (
+        <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="22 3 2 3 10 13 10 21 14 18 14 13 22 3" />
+        </svg>
+    );
+
     return (
-        <div>
-            <div className="mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                    <div>
-                        <h2 className="text-xl font-bold">Category Management</h2>
-                        <p className="text-sm text-gray-500">Manage categories for vendors to assign to products.</p>
+        <div className="bg-white rounded-2xl shadow-sm">
+            {/* Header with Add Category */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-2 border-b border-gray-100">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800">Category Management</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {filteredCategories.length} categor{filteredCategories.length !== 1 ? 'ies' : 'y'} found
+                        {hasActiveFilters && ' (filtered)'}
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        placeholder="New category name..."
+                        className="w-64 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        onKeyPress={(e) => e.key === 'Enter' && handleCreateCategory()}
+                    />
+                    <button
+                        type="button"
+                        onClick={handleCreateCategory}
+                        disabled={creating || !newCategory.trim()}
+                        className="btn-primary flex items-center gap-2 px-4 py-2 whitespace-nowrap"
+                    >
+                        <Plus size={16} />
+                        Add Category
+                    </button>
+                </div>
+            </div>
+
+            {/* Statistics Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-2 border-b border-gray-100 bg-gray-50/30">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                        <Package size={18} className="text-blue-600" />
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                        <input
-                            type="text"
-                            value={newCategory}
-                            onChange={(e) => setNewCategory(e.target.value)}
-                            placeholder="New category name"
-                            className="input-field w-full sm:w-72"
-                        />
-                        <button
-                            type="button"
-                            onClick={handleCreateCategory}
-                            disabled={creating || !newCategory.trim()}
-                            className="btn-primary w-full sm:w-auto"
-                        >
-                            {creating ? 'Creating...' : 'Add Category'}
-                        </button>
+                    <div>
+                        <p className="text-2xl font-bold text-gray-800">{totalCategories}</p>
+                        <p className="text-xs text-gray-500">Total Categories</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                        <TrendingUp size={18} className="text-green-600" />
+                    </div>
+                    <div>
+                        <p className="text-2xl font-bold text-gray-800">{recentCategories}</p>
+                        <p className="text-xs text-gray-500">Added This Week</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                        <Package size={18} className="text-primary" />
+                    </div>
+                    <div>
+                        <p className="text-2xl font-bold text-gray-800">—</p>
+                        <p className="text-xs text-gray-500">Used by Products</p>
                     </div>
                 </div>
             </div>
 
-            {categories.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-8 text-center">
-                    <Package className="mx-auto mb-4 text-gray-400" size={48} />
-                    <p className="text-gray-500">No categories yet. They will appear when vendors create products.</p>
+            {/* Search Bar - Fixed Layout */}
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Search Input - Takes remaining space */}
+                    <div className="flex-1">
+                        <div className="relative">
+                            <Search className="relative translate-y-8.5 translate-x-2.5 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search categories..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input-no-padding w-full  border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+                            />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Filter Button */}
+                    <button
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition whitespace-nowrap ${isFilterOpen || hasActiveFilters
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                            }`}
+                    >
+                        <FilterIcon size={18} />
+                        Filters
+                        {hasActiveFilters && (
+                            <span className="ml-1 w-5 h-5 bg-white text-primary rounded-full text-xs flex items-center justify-center">
+                                {[searchTerm].filter(Boolean).length}
+                            </span>
+                        )}
+                        <ChevronDown size={16} className={`transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Sort Dropdown */}
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name_asc">Name: A to Z</option>
+                        <option value="name_desc">Name: Z to A</option>
+                    </select>
+                </div>
+
+                {/* Expanded Filters */}
+                {isFilterOpen && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex justify-end">
+                            <button
+                                onClick={clearFilters}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
+                            >
+                                Clear All Filters
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Categories Table */}
+            {filteredCategories.length === 0 ? (
+                <div className="text-center py-16">
+                    <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <Package size={40} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">No categories found</h3>
+                    <p className="text-gray-500 mb-6">
+                        {hasActiveFilters ? 'Try adjusting your filters' : 'Create your first category to get started'}
+                    </p>
+                    {hasActiveFilters && (
+                        <button onClick={clearFilters} className="btn-primary inline-flex items-center gap-2">
+                            Clear Filters
+                        </button>
+                    )}
                 </div>
             ) : (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {categories.map((cat) => (
-                                <tr key={cat._id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">
-                                        {editingId === cat._id ? (
-                                            <input
-                                                type="text"
-                                                value={editName}
-                                                onChange={(e) => setEditName(e.target.value)}
-                                                className="input-field"
-                                                autoFocus
-                                            />
-                                        ) : (
-                                            <span className="font-medium">{cat.name}</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                        {new Date(cat.createdAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex gap-2">
-                                            {editingId === cat._id ? (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleEdit(cat._id, editName)}
-                                                        className="px-3 py-1 bg-green-500 text-white rounded text-sm"
-                                                    >
-                                                        Save
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setEditingId(null)}
-                                                        className="px-3 py-1 bg-gray-500 text-white rounded text-sm"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingId(cat._id);
-                                                            setEditName(cat.name);
-                                                        }}
-                                                        className="text-blue-500 hover:text-blue-700"
-                                                    >
-                                                        <Edit size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(cat._id, cat.name)}
-                                                        className="text-red-500 hover:text-red-700"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
+                <>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category Name</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created Date</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {currentCategories.map((cat) => (
+                                    <tr key={cat._id} className="hover:bg-gray-50 transition-colors duration-200 group">
+                                        <td className="px-6 py-4">
+                                            {editingId === cat._id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editName}
+                                                    onChange={(e) => setEditName(e.target.value)}
+                                                    className="w-64 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                                    autoFocus
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            handleEdit(cat._id, editName);
+                                                        }
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span className="font-medium text-gray-800">{cat.name}</span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm text-gray-500">
+                                                {new Date(cat.createdAt).toLocaleDateString('en-PK', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })}
+                                            </p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                {editingId === cat._id ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleEdit(cat._id, editName)}
+                                                            className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingId(null);
+                                                                setEditName('');
+                                                            }}
+                                                            className="px-3 py-1.5 bg-gray-500 text-white rounded-lg text-sm hover:bg-gray-600 transition"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingId(cat._id);
+                                                                setEditName(cat.name);
+                                                            }}
+                                                            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                                            title="Edit Category"
+                                                        >
+                                                            <Edit size={18} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(cat._id, cat.name)}
+                                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                                            title="Delete Category"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100">
+                            <p className="text-sm text-gray-500">
+                                Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
+                                <span className="font-medium">{Math.min(indexOfLastItem, filteredCategories.length)}</span> of{' '}
+                                <span className="font-medium">{filteredCategories.length}</span> categories
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => goToPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                >
+                                    <ChevronLeft size={18} />
+                                </button>
+                                <div className="flex gap-1">
+                                    {[...Array(Math.min(totalPages, 5))].map((_, i) => {
+                                        let pageNum;
+                                        if (totalPages <= 5) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage <= 3) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage >= totalPages - 2) {
+                                            pageNum = totalPages - 4 + i;
+                                        } else {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => goToPage(pageNum)}
+                                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${currentPage === pageNum
+                                                    ? 'bg-primary text-white shadow-sm'
+                                                    : 'text-gray-600 hover:bg-gray-100'
+                                                    }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <button
+                                    onClick={() => goToPage(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                >
+                                    <ChevronRight size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
+
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
         </div>
     );
 };

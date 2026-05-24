@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import Loader from '../../components/common/AnimatedLoader';
-import Navbar from '../../components/common/Navbar';
+import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
 import { getProductById } from '../../services/product';
 import { formatPrice } from '../../utils/formatPrice';
@@ -56,7 +56,14 @@ const ProductDetail = () => {
 
   if (loading) return (
     <>
-      <Navbar />
+      <Header
+        variant="public"
+        position="sticky"
+        showProductsLink
+        showCart
+        cartVisibility="customer"
+        showMobileMenu
+      />
       <Loader />
       <Footer />
     </>
@@ -64,7 +71,14 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <>
-        <Navbar />
+        <Header
+          variant="public"
+          position="sticky"
+          showProductsLink
+          showCart
+          cartVisibility="customer"
+          showMobileMenu
+        />
         <div className="container mx-auto px-4 py-10">
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-lg font-semibold text-gray-700">{errorMessage || 'Product not found'}</p>
@@ -80,7 +94,14 @@ const ProductDetail = () => {
 
   return (
     <>
-      <Navbar />
+      <Header
+        variant="public"
+        position="sticky"
+        showProductsLink
+        showCart
+        cartVisibility="customer"
+        showMobileMenu
+      />
       <div className="min-h-screen bg-slate-50 py-8">
         <div className="container mx-auto px-4">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

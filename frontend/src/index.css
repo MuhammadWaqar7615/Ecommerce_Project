@@ -155,12 +155,12 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
 }
 
 /* Improve default sizing for all form controls for comfortable typing */
-input, textarea, select {
+/* input, textarea, select {
   padding: 0.75rem 1rem;
   min-height: 44px;
   font-size: 1rem;
   border-radius: 0.5rem;
-}
+} */
 
 .search-input-no-padding {
   padding: 0.75rem 2rem !important;

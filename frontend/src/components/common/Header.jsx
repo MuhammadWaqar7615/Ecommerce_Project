@@ -102,13 +102,10 @@ const Header = ({
               <FaBars size={18} />
             </button>
             <div className="flex items-center gap-2">
-              <span>
-                <img src={logo} alt="Logo" width={32} height={32} className="inline-block" />
-              </span>
-              <h1 className="text-lg md:text-xl font-bold text-white">Crafts & Delights</h1>
-              <p className="text-xs text-white/80 hidden sm:block">
-                Welcome, {getDisplayName(user)}
-              </p>
+              <Link to="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-white">
+                <img src="/logo.svg" alt="Logo" width={48} height={48} />
+                Crafts & Delights
+              </Link>
             </div>
           </div>
 

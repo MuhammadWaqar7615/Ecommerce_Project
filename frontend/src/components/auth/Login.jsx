@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { login, loginWithGoogle } from '../../services/auth';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { ArrowLeftIcon } from 'lucide-react';
 
 const Login = () => {
   const [identifier, setIdentifier] = useState(''); // Can be email or username
@@ -102,6 +103,10 @@ const Login = () => {
 
           <div className="mx-auto w-full max-w-md auth-card p-8">
             <div className="space-y-6">
+              <span className='flex items-center justify-start gap-2'>
+                <ArrowLeftIcon size={18} className='text-primary' />
+                <Link to="/" className="text-primary hover:underline">Go back to Dashboard</Link>
+              </span>
               <div>
                 <h2 className="text-2xl font-extrabold text-gray-900 text-center">Sign in to your account</h2>
                 <p className="mt-2 text-center text-sm text-gray-600">Or <Link to="/register" className="font-medium text-primary hover:underline">create a new account</Link></p>

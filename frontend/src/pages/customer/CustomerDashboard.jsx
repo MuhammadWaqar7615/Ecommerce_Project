@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import DashboardLayout from '../../components/common/DashboardLayout';
 import { getOrders } from '../../services/order';
 import { formatPrice } from '../../utils/formatPrice';
 import { ORDER_STATUS_COLORS } from '../../utils/constants';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Package, DollarSign, Clock } from 'lucide-react';
+import { ShoppingBag, Package, DollarSign, Clock, Eye } from 'lucide-react';
 
 const CustomerDashboard = () => {
   const [stats, setStats] = useState({
@@ -38,7 +39,8 @@ const CustomerDashboard = () => {
       });
       
       // Get recent orders (last 5)
-      setRecentOrders(orders.slice(0, 5));
+      const sortedOrders = [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setRecentOrders(sortedOrders.slice(0, 5));
     } catch (error) {
       console.error('Error fetching customer data:', error);
     } finally {
@@ -46,11 +48,32 @@ const CustomerDashboard = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const statCardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3, type: "spring", stiffness: 300 } },
+    hover: { scale: 1.02, transition: { duration: 0.2 } }
+  };
+
   if (loading) {
     return (
       <DashboardLayout title="My Dashboard" subtitle="Welcome to your dashboard">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
+          />
         </div>
       </DashboardLayout>
     );
@@ -58,112 +81,180 @@ const CustomerDashboard = () => {
 
   return (
     <DashboardLayout title="My Dashboard" subtitle="Welcome to your dashboard">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Total Orders</p>
-              <p className="text-3xl font-bold mt-1">{stats.totalOrders}</p>
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        {/* Statistics Cards */}
+        <motion.div 
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+          variants={containerVariants}
+        >
+          <motion.div 
+            variants={statCardVariants}
+            whileHover="hover"
+            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Orders</p>
+                <motion.p 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  className="text-2xl font-bold text-gray-800"
+                >
+                  {stats.totalOrders}
+                </motion.p>
+              </div>
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <ShoppingBag size={20} className="text-blue-500" />
+              </div>
             </div>
-            <ShoppingBag size={32} className="opacity-80" />
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Total Spent</p>
-              <p className="text-2xl font-bold mt-1">{formatPrice(stats.totalSpent)}</p>
-            </div>
-            <DollarSign size={32} className="opacity-80" />
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Active Orders</p>
-              <p className="text-3xl font-bold mt-1">{stats.activeOrders}</p>
-            </div>
-            <Clock size={32} className="opacity-80" />
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Delivered</p>
-              <p className="text-3xl font-bold mt-1">{stats.deliveredOrders}</p>
-            </div>
-            <Package size={32} className="opacity-80" />
-          </div>
-        </div>
-      </div>
+          </motion.div>
 
-      {/* Recent Orders */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">Recent Orders</h2>
-          <Link to="/customer/orders" className="text-primary hover:underline text-sm">
-            View All →
-          </Link>
-        </div>
-        
-        {recentOrders.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-500">You haven't placed any orders yet.</p>
-            <Link to="/products" className="btn-primary inline-block mt-4">
-              Start Shopping
+          <motion.div 
+            variants={statCardVariants}
+            whileHover="hover"
+            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Spent</p>
+                <motion.p 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  className="text-2xl font-bold text-primary"
+                >
+                  {formatPrice(stats.totalSpent)}
+                </motion.p>
+              </div>
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                <DollarSign size={20} className="text-green-500" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            variants={statCardVariants}
+            whileHover="hover"
+            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Active Orders</p>
+                <motion.p 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  className="text-2xl font-bold text-yellow-600"
+                >
+                  {stats.activeOrders}
+                </motion.p>
+              </div>
+              <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center">
+                <Clock size={20} className="text-yellow-500" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            variants={statCardVariants}
+            whileHover="hover"
+            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm cursor-pointer"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Delivered</p>
+                <motion.p 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  className="text-2xl font-bold text-green-600"
+                >
+                  {stats.deliveredOrders}
+                </motion.p>
+              </div>
+              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                <Package size={20} className="text-purple-500" />
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Recent Orders */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
+        >
+          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-800">Recent Orders</h2>
+            <Link to="/customer/orders" className="text-primary hover:underline text-sm font-medium">
+              View All →
             </Link>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {recentOrders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {order.orderNumber}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {order.items.length} items
-                    </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                      {formatPrice(order.totalAmount)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`badge ${ORDER_STATUS_COLORS[order.status]}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
+          
+          {recentOrders.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <ShoppingBag size={32} className="text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-4">You haven't placed any orders yet</p>
+              <Link to="/products" className="btn-primary inline-flex items-center gap-2">
+                Start Shopping
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {recentOrders.map((order, index) => (
+                <motion.div
+                  key={order._id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.4 }}
+                  whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
+                  className="p-5 transition-colors"
+                >
+                  <div className="flex flex-wrap justify-between items-center gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <p className="text-sm font-semibold text-gray-800">
+                          Order #{order.orderNumber}
+                        </p>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-700'}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                        <span>{new Date(order.createdAt).toLocaleDateString('en-PK', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}</span>
+                        <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-primary">{formatPrice(order.totalAmount)}</p>
                       <Link 
-                        to={`/customer/orders/${order._id}`} 
-                        className="text-primary hover:underline text-sm"
+                        to={`/customer/orders/${order._id}`}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
                       >
+                        <Eye size={12} />
                         View Details
                       </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
   );
 };

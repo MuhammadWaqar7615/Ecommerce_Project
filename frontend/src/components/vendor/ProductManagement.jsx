@@ -7,6 +7,7 @@ import {
     Search, Filter, X, ChevronDown, LayoutGrid, List,
     Star
 } from 'lucide-react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getVendorProducts, updateProduct, deleteProduct } from '../../services/vendor';
 import { formatPrice } from '../../utils/formatPrice';
 
@@ -240,11 +241,7 @@ const ProductManagement = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <AnimatedLoader size="lg" label="Loading products..." />;
     }
 
     return (

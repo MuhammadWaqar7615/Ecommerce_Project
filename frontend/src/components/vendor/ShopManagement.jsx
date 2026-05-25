@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { Save, Building } from 'lucide-react';
 import { getShop, createShop, updateShop } from '../../services/vendor';
 
@@ -58,7 +59,7 @@ const ShopManagement = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading shop details...</div>;
+    return <AnimatedLoader size="lg" label="Loading shop details..." />;
   }
 
   return (

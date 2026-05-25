@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnimatedLoader from '../common/AnimatedLoader';
 import {
   Users, ShoppingBag, Package, DollarSign, TrendingUp, Eye,
   Calendar, CheckCircle, Clock, XCircle, ArrowUp, ArrowDown,
@@ -59,13 +60,7 @@ const OverviewDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full"
-        />
-      </div>
+      <AnimatedLoader size="lg" label="Loading analytics..." />
     );
   }
 

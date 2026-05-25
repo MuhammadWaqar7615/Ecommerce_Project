@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getRevenueAnalytics } from '../../services/vendor';
 import { formatPrice } from '../../utils/formatPrice';
 
@@ -23,7 +24,7 @@ const RevenueAnalytics = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading analytics...</div>;
+    return <AnimatedLoader size="lg" label="Loading analytics..." />;
   }
 
   return (

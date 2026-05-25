@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
+import AnimatedLoader from './components/common/AnimatedLoader';
 import Footer from './components/common/Footer';
 import InputDefaults from './components/common/InputDefaults';
 import Login from './components/auth/Login';
@@ -45,7 +46,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <AnimatedLoader fullScreen size="lg" label="Checking session..." />;
   }
 
   if (!isAuthenticated) {

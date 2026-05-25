@@ -6,6 +6,7 @@ import {
   Grid3x3, Table2, Store, Tag, DollarSign, Box,
   AlertCircle, RefreshCw
 } from 'lucide-react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getAllProducts, toggleProductVisibility } from '../../services/admin';
 import { formatPrice } from '../../utils/formatPrice';
 import 'react-toastify/dist/ReactToastify.css';
@@ -257,11 +258,7 @@ const ProductModeration = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <AnimatedLoader size="lg" label="Loading products..." />;
   }
   console.log("categories: ", categories)
 

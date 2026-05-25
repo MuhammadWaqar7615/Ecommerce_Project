@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getPendingVendors, approveVendor, suspendVendor } from '../../services/admin';
+import AnimatedLoader from '../common/AnimatedLoader';
 
 const PendingVendors = () => {
   const [vendors, setVendors] = useState([]);
@@ -53,11 +54,7 @@ const PendingVendors = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <AnimatedLoader size="lg" label="Loading pending vendors..." />;
   }
 
   if (vendors.length === 0) {

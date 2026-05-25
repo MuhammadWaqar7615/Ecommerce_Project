@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -36,8 +37,7 @@ const PaymentSuccess = () => {
       <div className="max-w-md mx-auto">
         {status === 'checking' && (
           <div className="text-center">
-            <Loader className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
-            <p className="text-gray-600">Verifying your payment...</p>
+            <AnimatedLoader size="lg" label="Verifying your payment..." />
           </div>
         )}
 

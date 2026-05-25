@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { Save, Percent, Truck, MapPin, DollarSign, TrendingUp } from 'lucide-react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getSettings, updateSetting } from '../../services/admin';
 
 const SystemSettings = () => {
@@ -54,11 +55,7 @@ const SystemSettings = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <AnimatedLoader size="lg" label="Loading settings..." />;
     }
 
     return (

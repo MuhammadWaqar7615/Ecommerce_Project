@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { Edit, Trash2, Plus, Search, X, ChevronDown, ChevronLeft, ChevronRight, Package, TrendingUp } from 'lucide-react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getAllCategories, addCategory, updateCategory, deleteCategory } from '../../services/admin';
 
 const CategoryManagement = () => {
@@ -165,11 +166,7 @@ const CategoryManagement = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <AnimatedLoader size="lg" label="Loading categories..." />;
     }
 
     const FilterIcon = ({ size, className }) => (

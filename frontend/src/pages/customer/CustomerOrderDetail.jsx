@@ -75,9 +75,7 @@ const CustomerOrderDetail = () => {
   if (loading) {
     return (
       <DashboardLayout title="Order Details" subtitle="View your order information">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+        <AnimatedLoader size="lg" label="Loading order details..." />
       </DashboardLayout>
     );
   }

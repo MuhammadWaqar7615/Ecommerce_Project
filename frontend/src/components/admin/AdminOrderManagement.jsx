@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { Search, Filter, X, ChevronDown, ChevronLeft, ChevronRight, ShoppingBag, DollarSign, Package, Users } from 'lucide-react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getAllOrders } from '../../services/admin';
 import { formatPrice } from '../../utils/formatPrice';
 import { ORDER_STATUS_COLORS } from '../../utils/constants';
@@ -140,11 +141,7 @@ const AdminOrderManagement = () => {
     );
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <AnimatedLoader size="lg" label="Loading orders..." />;
     }
 
     return (

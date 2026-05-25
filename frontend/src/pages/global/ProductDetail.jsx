@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import Loader from '../../components/common/AnimatedLoader';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
 import { getProductById } from '../../services/product';
@@ -64,7 +64,7 @@ const ProductDetail = () => {
         cartVisibility="customer"
         showMobileMenu
       />
-      <Loader />
+      <AnimatedLoader />
       <Footer />
     </>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/common/DashboardLayout';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { useCart } from '../../context/CartContext';
 import { formatPrice } from '../../utils/formatPrice';
 import { FaTrash } from 'react-icons/fa';
@@ -32,7 +33,7 @@ const Cart = () => {
   if (loading) {
     return (
       <DashboardLayout title="Shopping Cart" subtitle="Review your items">
-        <div className="text-center py-10">Loading cart...</div>
+        <AnimatedLoader size="lg" label="Loading cart..." />
       </DashboardLayout>
     );
   }

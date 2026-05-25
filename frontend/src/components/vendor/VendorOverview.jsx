@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { Package, ShoppingBag, Store, TrendingUp } from 'lucide-react';
 
 const VendorOverview = () => {
@@ -70,7 +71,7 @@ const VendorOverview = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading dashboard...</div>;
+    return <AnimatedLoader size="lg" label="Loading dashboard..." />;
   }
 
   if (error) {

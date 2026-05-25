@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AnimatedLoader from '../common/AnimatedLoader';
 import { getVendorOrders, updateOrderStatus } from '../../services/vendor';  // ← VENDOR service, not admin
 import { formatPrice } from '../../utils/formatPrice';
 import { ORDER_STATUS_COLORS } from '../../utils/constants';
@@ -40,7 +41,7 @@ const OrderManagement = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading orders...</div>;
+    return <AnimatedLoader size="lg" label="Loading orders..." />;
   }
 
   if (orders.length === 0) {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import AnimatedLoader from '../components/common/AnimatedLoader';
 
 const LoadingContext = createContext();
 
@@ -28,16 +29,7 @@ export const LoadingProvider = ({ children }) => {
     <LoadingContext.Provider value={{ isLoading, loadingText, showLoading, hideLoading }}>
       {children}
       {isLoading && (
-        <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-          <div className="text-center">
-            <img 
-              src="/favicon.svg" 
-              alt="Loading..." 
-              className="w-16 h-16 mx-auto animate-pulse-subtle"
-            />
-            <p className="mt-4 text-primary font-medium">{loadingText}</p>
-          </div>
-        </div>
+        <AnimatedLoader fullScreen size="lg" label={loadingText} />
       )}
     </LoadingContext.Provider>
   );

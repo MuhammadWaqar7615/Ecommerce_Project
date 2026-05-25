@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { createOrder } from '../../services/order';
 import { getStripePublicKey } from '../../services/payment';
 import StripePaymentForm from '../../components/common/StripePaymentForm';
@@ -94,7 +95,7 @@ const Checkout = () => {
   if (cartLoading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <p className="text-gray-600">Loading cart...</p>
+        <AnimatedLoader size="lg" label="Loading cart..." />
       </div>
     );
   }

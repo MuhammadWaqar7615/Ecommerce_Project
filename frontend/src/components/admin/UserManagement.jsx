@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { getAllUsers, suspendUser, deleteUser } from '../../services/admin';
+import AnimatedLoader from '../common/AnimatedLoader';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -176,11 +177,7 @@ const UserManagement = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <AnimatedLoader size="lg" label="Loading users..." />;
   }
 
   return (

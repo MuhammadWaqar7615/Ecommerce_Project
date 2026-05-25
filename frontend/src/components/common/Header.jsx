@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaUser, FaBars, FaChevronDown, FaShoppingCart, FaSearch, FaTimes } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
-import logo from '/public/logo.svg';
 
 const getRoleDisplay = (role) => {
   if (!role) return '';

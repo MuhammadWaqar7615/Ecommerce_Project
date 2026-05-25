@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../../components/common/ProductCard';
-import Loader from '../../components/common/AnimatedLoader';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { getPublicProducts, getCategories } from '../../services/product';
 
 const ProductListing = () => {
@@ -134,7 +134,7 @@ const ProductListing = () => {
         {/* Products Grid */}
         <div className="md:w-3/4">
           {loading ? (
-            <Loader />
+            <AnimatedLoader />
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

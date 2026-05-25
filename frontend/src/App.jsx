@@ -28,7 +28,7 @@ import UserManagement from './components/admin/UserManagement';
 import ProductModeration from './components/admin/ProductModeration';
 import OrderManagement from './components/admin/AdminOrderManagement';
 import SystemSettings from './components/admin/SystemSettings';
-import AnalyticsDashboard from './components/admin/AnalyticsDashboard';
+import OverviewDashboard from './components/admin/OverviewDasboard';
 import VendorOverview from './components/vendor/VendorOverview';
 import ShopManagement from './components/vendor/ShopManagement';
 import ProductManagement from './components/vendor/ProductManagement';
@@ -64,7 +64,8 @@ const AdminLayout = () => {
   return (
     <AdminDashboard>
       <Routes>
-        <Route path="/" element={<AnalyticsDashboard />} />
+        <Route path="/" element={<OverviewDashboard />} />
+        <Route path="/dashboard" element={<OverviewDashboard />} />
         <Route path="/pending-vendors" element={<PendingVendors />} />
         <Route path="/users" element={<UserManagement />} />
         <Route path="/products" element={<ProductModeration />} />

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaUser, FaBars, FaChevronDown, FaShoppingCart, FaSearch, FaTimes } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
+import logo from '/public/logo.svg';
 
 const getRoleDisplay = (role) => {
   if (!role) return '';
@@ -100,7 +101,10 @@ const Header = ({
             >
               <FaBars size={18} />
             </button>
-            <div>
+            <div className="flex items-center gap-2">
+              <span>
+                <img src={logo} alt="Logo" width={32} height={32} className="inline-block" />
+              </span>
               <h1 className="text-lg md:text-xl font-bold text-white">Crafts & Delights</h1>
               <p className="text-xs text-white/80 hidden sm:block">
                 Welcome, {getDisplayName(user)}

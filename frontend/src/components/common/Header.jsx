@@ -236,7 +236,7 @@ const Header = ({
                         <p className="text-sm font-semibold text-gray-800">{user?.fullName}</p>
                         <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Role: <span className="font-medium text-primary">{getRoleDisplay(user?.role)}</span>
+                          <span className="font-medium text-primary">{getRoleDisplay(user?.role)}</span>
                         </p>
                       </div>
                       <Link

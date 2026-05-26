@@ -34,7 +34,6 @@ const Login = () => {
     try {
       console.log('Attempting login with:', identifier);
       const data = await login(identifier, password);
-      console.log('Login response data:', data);
 
       if (data && data.user) {
         if (!data.user.isEmailVerified) {

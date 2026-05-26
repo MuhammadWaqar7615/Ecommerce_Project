@@ -13,6 +13,7 @@ const SystemSettings = () => {
         shipping_per_km_rate: 10,
         max_distance_for_delivery: 50
     });
+    
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isDirty, setIsDirty] = useState(false);

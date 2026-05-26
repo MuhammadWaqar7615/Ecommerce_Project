@@ -83,7 +83,7 @@ const VendorLayout = () => {
   return (
     <VendorDashboard>
       <Routes>
-        <Route path="/" element={<VendorOverview />} />
+        <Route path="/dashboard" element={<VendorOverview />} />
         <Route path="/shop" element={<ShopManagement />} />
         <Route path="/products" element={<ProductManagement />} />
         <Route path="/products/add" element={<AddEditProduct />} />

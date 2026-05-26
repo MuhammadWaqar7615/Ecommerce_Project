@@ -157,6 +157,7 @@ const Header = ({
     );
   }
 
+  // For global pages
   return (
     <header className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
       <div className="container mx-auto px-4">

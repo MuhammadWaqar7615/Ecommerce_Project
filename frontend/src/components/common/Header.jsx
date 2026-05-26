@@ -128,7 +128,7 @@ const Header = ({
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
+              <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                   <p className="text-sm font-semibold text-gray-800">{user?.fullName}</p>
                   <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
@@ -231,7 +231,7 @@ const Header = ({
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
                   {user ? (
                     <>
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">

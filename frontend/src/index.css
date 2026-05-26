@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #8B5E3C;
+  --color-primary: #713d18;
   --color-secondary: #D4A373;
   --color-accent: #E9EDC9;
   --color-dark: #5C3A21;
@@ -110,7 +110,7 @@ body {
 
 /* Better active state indicators */
 .bg-primary {
-  background-color: #8B5E3C;
+  background-color: #713d18
 }
 
 .hover\:bg-primary\/10:hover {

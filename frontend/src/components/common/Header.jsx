@@ -200,7 +200,7 @@ const Header = ({
             )}
 
             {shouldShowCart && (
-              <Link to="/cart" className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
+              <Link to="/cart" className="relative ml-2 p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
                 <FaShoppingCart size={18} />
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">

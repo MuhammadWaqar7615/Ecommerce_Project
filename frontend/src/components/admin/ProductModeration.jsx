@@ -249,20 +249,6 @@ const ProductModeration = () => {
   const handleToggleVisibility = async (product) => {
     const action = product.isVisible ? 'hide' : 'show';
     
-    toast.info(
-      <div>
-        <p className="font-semibold">{action === 'hide' ? 'Hide Product?' : 'Show Product?'}</p>
-        <p className="text-sm mt-1">Are you sure you want to {action} "{product.name}"?</p>
-      </div>,
-      {
-        position: "top-right",
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-        closeButton: false,
-      }
-    );
-    
     try {
       await toggleProductVisibility(product._id);
       toast.success(`Product ${action}den successfully!`);

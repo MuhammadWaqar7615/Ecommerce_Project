@@ -68,7 +68,6 @@ const Checkout = () => {
     }
   };
 
-
   const handlePaymentSuccess = (redirectUrl) => {
     // Navigate to success page with payment details
     console.log(redirectUrl)

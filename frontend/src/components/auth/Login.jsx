@@ -46,8 +46,6 @@ const Login = () => {
           return;
         }
 
-        loginUser(data.user, data.token);
-
         if (data.user.role === 'admin') {
           window.location.href = '/admin/dashboard';
         } else if (data.user.role === 'vendor') {

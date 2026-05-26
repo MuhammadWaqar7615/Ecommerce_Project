@@ -89,6 +89,7 @@ const Header = ({
     ? 'fixed top-0 left-0 right-0'
     : `${position === 'sticky' ? 'sticky' : 'fixed'} top-0 left-0 right-0`;
 
+    // for dashboard variants
   if (isDashboard) {
     return (
       <header ref={headerRef} className={`${headerPositionClass} bg-primary shadow-lg z-50`}>

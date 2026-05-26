@@ -5,6 +5,7 @@ import DashboardLayout from '../../components/common/DashboardLayout';
 import { getOrders } from '../../services/order';
 import { formatPrice } from '../../utils/formatPrice';
 import { ORDER_STATUS_COLORS } from '../../utils/constants';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { Link } from 'react-router-dom';
 import { 
     ShoppingBag, Package, Truck, CheckCircle, XCircle, Clock, 

@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/common/DashboardLayout';
 import { getOrderById, cancelOrder } from '../../services/order';
 import { formatPrice } from '../../utils/formatPrice';
 import { ORDER_STATUS_COLORS } from '../../utils/constants';
+import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { 
   Package, Truck, CheckCircle, XCircle, Clock, 
   MapPin, Calendar, CreditCard, ArrowLeft, AlertCircle 

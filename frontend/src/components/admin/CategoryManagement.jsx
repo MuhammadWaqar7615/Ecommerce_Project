@@ -171,10 +171,6 @@ const CategoryManagement = () => {
 
     const handleDelete = async (id, name) => {
         toast.info(
-            <div>
-                <p className="font-semibold">⚠️ Delete Category?</p>
-                <p className="text-sm mt-1">Are you sure you want to delete "{name}"? Products using this category will become "Uncategorized". This action cannot be undone!</p>
-            </div>,
             {
                 position: "top-right",
                 autoClose: false,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ToastContainer, toast } from 'react-toastify';
 import {
   Eye, EyeOff, Search, Filter, X, ChevronDown,
@@ -30,6 +31,41 @@ const ProductModeration = () => {
   const [categories, setCategories] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
+  const tableRowVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+    hover: { backgroundColor: "rgba(0,0,0,0.02)", transition: { duration: 0.2 } }
+  };
+
+  const gridCardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
+    hover: { y: -5, transition: { duration: 0.2 } }
+  };
+
+  const filterVariants = {
+    hidden: { height: 0, opacity: 0 },
+    visible: { height: "auto", opacity: 1, transition: { duration: 0.3, ease: "easeOut" } },
+    exit: { height: 0, opacity: 0, transition: { duration: 0.3, ease: "easeIn" } }
+  };
 
   // Save scroll position before navigating away
   const saveScrollPosition = useCallback(() => {
@@ -207,23 +243,32 @@ const ProductModeration = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await fetchProducts();
-    toast.success('Products refreshed');
+    toast.success('Products refreshed successfully!');
   };
 
   const handleToggleVisibility = async (product) => {
     const action = product.isVisible ? 'hide' : 'show';
-    const confirmMessage = action === 'hide'
-      ? `Are you sure you want to hide "${product.name}" from customers?`
-      : `Are you sure you want to show "${product.name}" to customers?`;
-
-    if (window.confirm(confirmMessage)) {
-      try {
-        await toggleProductVisibility(product._id);
-        toast.success(`Product ${action}den successfully!`);
-        await fetchProducts();
-      } catch (error) {
-        toast.error(error.message || 'Failed to update product visibility');
+    
+    toast.info(
+      <div>
+        <p className="font-semibold">{action === 'hide' ? 'Hide Product?' : 'Show Product?'}</p>
+        <p className="text-sm mt-1">Are you sure you want to {action} "{product.name}"?</p>
+      </div>,
+      {
+        position: "top-right",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        closeButton: false,
       }
+    );
+    
+    try {
+      await toggleProductVisibility(product._id);
+      toast.success(`Product ${action}den successfully!`);
+      await fetchProducts();
+    } catch (error) {
+      toast.error(error.message || 'Failed to update product visibility');
     }
   };
 
@@ -260,12 +305,29 @@ const ProductModeration = () => {
   if (loading) {
     return <AnimatedLoader size="lg" label="Loading products..." />;
   }
-  console.log("categories: ", categories)
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="bg-white rounded-2xl shadow-sm"
+    >
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000} 
+        hideProgressBar={false} 
+        newestOnTop 
+        closeOnClick 
+        rtl={false} 
+        pauseOnFocusLoss 
+        draggable 
+        pauseOnHover 
+        theme="light" 
+      />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
+      <motion.div variants={cardVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Product Moderation</h2>
           <p className="text-sm text-gray-500 mt-1">
@@ -275,43 +337,53 @@ const ProductModeration = () => {
         </div>
         <div className="flex items-center gap-3">
           {/* Stats Badge */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg"
+          >
             <Package size={16} className="text-gray-500" />
             <span className="text-sm font-medium text-gray-700">{filteredProducts.length} Products</span>
-          </div>
+          </motion.div>
 
           {/* Refresh Button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleRefresh}
             disabled={isRefreshing}
             className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition disabled:opacity-50"
             title="Refresh"
           >
             <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
-          </button>
+          </motion.button>
 
           {/* View Toggle */}
           <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setViewMode('table')}
               className={`p-2 rounded-md transition ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
               title="Table View"
             >
               <Table2 size={18} />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-md transition ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
               title="Grid View"
             >
               <Grid3x3 size={18} />
-            </button>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Search and Filters Bar */}
-      <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+      <motion.div variants={cardVariants} className="p-4 border-b border-gray-100 bg-gray-50/50">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -321,20 +393,24 @@ const ProductModeration = () => {
               placeholder="Search by product name, description, or category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input-no-padding w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
             {searchTerm && (
-              <button
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
                 onClick={() => setSearchTerm('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X size={16} />
-              </button>
+              </motion.button>
             )}
           </div>
 
           {/* Filter Toggle Button */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition ${isFilterOpen || hasActiveFilters
               ? 'bg-primary text-white border-primary'
@@ -344,12 +420,18 @@ const ProductModeration = () => {
             <Filter size={18} />
             Filters
             {hasActiveFilters && (
-              <span className="ml-1 w-5 h-5 bg-white text-primary rounded-full text-xs flex items-center justify-center">
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="ml-1 w-5 h-5 bg-white text-primary rounded-full text-xs flex items-center justify-center"
+              >
                 {[searchTerm, vendorFilter, statusFilter, categoryFilter, stockFilter].filter(Boolean).length}
-              </span>
+              </motion.span>
             )}
-            <ChevronDown size={16} className={`transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-          </button>
+            <motion.div animate={{ rotate: isFilterOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <ChevronDown size={16} />
+            </motion.div>
+          </motion.button>
 
           {/* Sort Dropdown */}
           <select
@@ -370,304 +452,371 @@ const ProductModeration = () => {
         </div>
 
         {/* Expanded Filters */}
-        {isFilterOpen && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {/* Vendor Filter */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Vendor</label>
-                <select
-                  value={vendorFilter}
-                  onChange={(e) => setVendorFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                >
-                  <option value="">All Vendors</option>
-                  {vendors.map((vendor) => (
-                    <option key={vendor._id} value={vendor._id}>
-                      {vendor.shopName || vendor.name || 'Unknown Vendor'}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <AnimatePresence>
+          {isFilterOpen && (
+            <motion.div
+              variants={filterVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="mt-4 pt-4 border-t border-gray-200 overflow-hidden"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Vendor Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Vendor</label>
+                  <select
+                    value={vendorFilter}
+                    onChange={(e) => setVendorFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="">All Vendors</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor._id} value={vendor._id}>
+                        {vendor.shopName || vendor.name || 'Unknown Vendor'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Category Filter */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Category</label>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                {/* Category Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Category</label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Status Filter */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Visibility</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                >
-                  <option value="">All Status</option>
-                  <option value="visible">Visible</option>
-                  <option value="hidden">Hidden</option>
-                </select>
-              </div>
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Visibility</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="">All Status</option>
+                    <option value="visible">Visible</option>
+                    <option value="hidden">Hidden</option>
+                  </select>
+                </div>
 
-              {/* Stock Filter */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Stock Status</label>
-                <select
-                  value={stockFilter}
-                  onChange={(e) => setStockFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                >
-                  <option value="">All Stock</option>
-                  <option value="instock">In Stock (&gt;10)</option>
-                  <option value="low">Low Stock (≤10)</option>
-                  <option value="out">Out of Stock (0)</option>
-                </select>
-              </div>
+                {/* Stock Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Stock Status</label>
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  >
+                    <option value="">All Stock</option>
+                    <option value="instock">In Stock (&gt;10)</option>
+                    <option value="low">Low Stock (≤10)</option>
+                    <option value="out">Out of Stock (0)</option>
+                  </select>
+                </div>
 
-              {/* Filter Actions */}
-              <div className="flex items-end gap-2">
-                <button
-                  onClick={clearFilters}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
-                >
-                  Clear All
-                </button>
+                {/* Filter Actions */}
+                <div className="flex items-end gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={clearFilters}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm"
+                  >
+                    Clear All
+                  </motion.button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Products Display */}
-      {filteredProducts.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Package size={40} className="text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-700 mb-2">No products found</h3>
-          <p className="text-gray-500 mb-6">
-            {hasActiveFilters ? 'Try adjusting your filters' : 'No products available for moderation'}
-          </p>
-          {hasActiveFilters && (
-            <button onClick={clearFilters} className="btn-primary inline-flex items-center gap-2">
-              Clear Filters
-            </button>
-          )}
-        </div>
-      ) : viewMode === 'table' ? (
-        // Table View
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 sticky top-0">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product Details</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendor</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {currentProducts.map((product) => {
-                const stockStatus = getStockStatus(product.stock);
-                return (
-                  <tr key={product._id} className="hover:bg-gray-50 transition-colors duration-200">
-                    <td className="px-6 py-4">
-                      {product.images && product.images[0] ? (
-                        <img src={product.images[0]} alt={product.name} className="w-12 h-12 object-cover rounded-lg border border-gray-200" />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                          <Image size={20} className="text-gray-400" />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-medium text-gray-800 mb-1">{product.name}</p>
-                        <p className="text-sm text-gray-500 line-clamp-1">{product.description || 'No description'}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
-                        <Tag size={12} />
-                        {product.category?.name || product.category || 'Uncategorized'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Store size={14} className="text-gray-400" />
-                        <span className="text-sm text-gray-700">{product.shopId?.shopName || 'Unknown Vendor'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1">
-                        <DollarSign size={14} className="text-gray-400" />
-                        <span className="font-semibold text-gray-800">{formatPrice(product.price)}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Box size={14} className="text-gray-400" />
-                        <span className={`font-medium ${stockStatus.text}`}>
-                          {product.stock}
-                        </span>
-                        {stockStatus.label && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${stockStatus.bg} ${stockStatus.text}`}>
-                            {stockStatus.label}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {product.isVisible ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                          Visible
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700">
-                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                          Hidden
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center">
-                        <button
-                          onClick={() => handleToggleVisibility(product)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${product.isVisible ? 'bg-green-500' : 'bg-gray-300'
-                            }`}
-                          title={product.isVisible ? 'Click to hide' : 'Click to show'}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${product.isVisible ? 'translate-x-6' : 'translate-x-1'
-                              }`}
-                          />
-                        </button>
-                      </div>
-                    </td>
+      <AnimatePresence mode="wait">
+        {filteredProducts.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="text-center py-16"
+          >
+            <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Package size={40} className="text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">No products found</h3>
+            <p className="text-gray-500 mb-6">
+              {hasActiveFilters ? 'Try adjusting your filters' : 'No products available for moderation'}
+            </p>
+            {hasActiveFilters && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={clearFilters}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                Clear Filters
+              </motion.button>
+            )}
+          </motion.div>
+        ) : viewMode === 'table' ? (
+          // Table View
+          <motion.div
+            key="table"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Image</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product Details</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendor</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        // Grid View
-        <div className="p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {currentProducts.map((product) => {
-              const stockStatus = getStockStatus(product.stock);
-              return (
-                <div key={product._id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  {/* Image Container */}
-                  <div className="relative h-48 bg-gray-100 overflow-hidden">
-                    {product.images && product.images[0] ? (
-                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package size={48} className="text-gray-400" />
-                      </div>
-                    )}
-                    {product.isVisible ? (
-                      <span className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded-full flex items-center gap-1">
-                        <Eye size={12} /> Visible
-                      </span>
-                    ) : (
-                      <span className="absolute top-2 right-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full flex items-center gap-1">
-                        <EyeOff size={12} /> Hidden
-                      </span>
-                    )}
-                    {product.stock <= 10 && product.stock > 0 && (
-                      <span className="absolute top-2 left-2 px-2 py-1 bg-orange-500 text-white text-xs rounded-full">Low Stock</span>
-                    )}
-                    {product.stock === 0 && (
-                      <span className="absolute top-2 left-2 px-2 py-1 bg-gray-500 text-white text-xs rounded-full">Out of Stock</span>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4">
-                    <div className="mb-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
-                        <Tag size={10} />
-                        {product.category?.name || product.category || 'Uncategorized'}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{product.name}</h3>
-                    <p className="text-sm text-gray-500 mb-2 line-clamp-2">{product.description || 'No description'}</p>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        <Store size={12} className="text-gray-400" />
-                        <span className="text-xs text-gray-500">{product.shopId?.shopName?.substring(0, 15) || 'Unknown'}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xl font-bold text-primary">{formatPrice(product.price)}</span>
-                      <div className="flex items-center gap-1">
-                        <Box size={14} className="text-gray-400" />
-                        <span className={`text-sm font-medium ${stockStatus.text}`}>{product.stock} units</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-1">
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  <AnimatePresence>
+                    {currentProducts.map((product, index) => {
+                      const stockStatus = getStockStatus(product.stock);
+                      return (
+                        <motion.tr
+                          key={product._id}
+                          variants={tableRowVariants}
+                          initial="hidden"
+                          animate="visible"
+                          whileHover="hover"
+                          transition={{ delay: index * 0.02 }}
+                          className="group"
+                        >
+                          <td className="px-4 py-3">
+                            {product.images && product.images[0] ? (
+                              <img src={product.images[0]} alt={product.name} className="w-10 h-10 object-cover rounded-lg border border-gray-200" />
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                <Image size={18} className="text-gray-400" />
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-gray-800 text-sm mb-1">{product.name}</p>
+                              <p className="text-xs text-gray-500 line-clamp-1">{product.description || 'No description'}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
+                              <Tag size={10} />
+                              {product.category?.name || product.category || 'Uncategorized'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              <Store size={12} className="text-gray-400" />
+                              <span className="text-xs text-gray-700">{product.shopId?.shopName || 'Unknown Vendor'}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-0.5">
+                              <span className="font-semibold text-gray-800 text-sm">{formatPrice(product.price)}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              <Box size={12} className="text-gray-400" />
+                              <span className={`text-sm font-medium ${stockStatus.text}`}>
+                                {product.stock}
+                              </span>
+                              {stockStatus.label && (
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${stockStatus.bg} ${stockStatus.text}`}>
+                                  {stockStatus.label}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            {product.isVisible ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                Visible
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
+                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                Hidden
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-center">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleToggleVisibility(product)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${product.isVisible ? 'bg-green-500' : 'bg-gray-300'
+                                  }`}
+                                title={product.isVisible ? 'Click to hide' : 'Click to show'}
+                              >
+                                <motion.span
+                                  initial={false}
+                                  animate={{ x: product.isVisible ? 24 : 2 }}
+                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                />
+                              </motion.button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        ) : (
+          // Grid View
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="p-6"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <AnimatePresence>
+                {currentProducts.map((product, index) => {
+                  const stockStatus = getStockStatus(product.stock);
+                  return (
+                    <motion.div
+                      key={product._id}
+                      variants={gridCardVariants}
+                      initial="hidden"
+                      animate="visible"
+                      whileHover="hover"
+                      transition={{ delay: index * 0.03 }}
+                      className="group bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
+                    >
+                      {/* Image Container */}
+                      <div className="relative h-44 bg-gray-100 overflow-hidden">
+                        {product.images && product.images[0] ? (
+                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package size={40} className="text-gray-400" />
+                          </div>
+                        )}
                         {product.isVisible ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-600">
-                            <Eye size={12} /> Visible
+                          <span className="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-xs rounded-full flex items-center gap-1">
+                            <Eye size={10} /> Visible
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-red-600">
-                            <EyeOff size={12} /> Hidden
+                          <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full flex items-center gap-1">
+                            <EyeOff size={10} /> Hidden
                           </span>
                         )}
+                        {product.stock <= 10 && product.stock > 0 && (
+                          <span className="absolute top-2 left-2 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">Low Stock</span>
+                        )}
+                        {product.stock === 0 && (
+                          <span className="absolute top-2 left-2 px-2 py-0.5 bg-gray-500 text-white text-xs rounded-full">Out of Stock</span>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleToggleVisibility(product)}
-                        className={`p-1.5 rounded-lg transition ${product.isVisible ? 'text-yellow-500 hover:bg-yellow-50' : 'text-green-500 hover:bg-green-50'}`}
-                        title={product.isVisible ? 'Hide' : 'Show'}
-                      >
-                        {product.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
+                      {/* Content */}
+                      <div className="p-3">
+                        <div className="mb-1.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
+                            <Tag size={10} />
+                            {product.category?.name || product.category || 'Uncategorized'}
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-1">{product.name}</h3>
+                        <p className="text-xs text-gray-500 mb-2 line-clamp-2">{product.description || 'No description'}</p>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-1">
+                            <Store size={10} className="text-gray-400" />
+                            <span className="text-xs text-gray-500">{product.shopId?.shopName?.substring(0, 15) || 'Unknown'}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-lg font-bold text-primary">{formatPrice(product.price)}</span>
+                          <div className="flex items-center gap-1">
+                            <Box size={12} className="text-gray-400" />
+                            <span className={`text-xs font-medium ${stockStatus.text}`}>{product.stock}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                          <div className="flex items-center gap-1">
+                            {product.isVisible ? (
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                                <Eye size={10} /> Visible
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs text-red-600">
+                                <EyeOff size={10} /> Hidden
+                              </span>
+                            )}
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleToggleVisibility(product)}
+                            className={`p-1 rounded-lg transition ${product.isVisible ? 'text-yellow-500 hover:bg-yellow-50' : 'text-green-500 hover:bg-green-50'}`}
+                            title={product.isVisible ? 'Hide' : 'Show'}
+                          >
+                            {product.isVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </motion.button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Pagination */}
       {filteredProducts.length > 0 && totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100"
+        >
           <p className="text-sm text-gray-500">
             Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
             <span className="font-medium">{Math.min(indexOfLastItem, filteredProducts.length)}</span> of{' '}
             <span className="font-medium">{filteredProducts.length}</span> products
           </p>
           <div className="flex gap-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
               className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <ChevronLeft size={18} />
-            </button>
+            </motion.button>
             <div className="flex gap-1">
               {[...Array(Math.min(totalPages, 5))].map((_, i) => {
                 let pageNum;
@@ -681,8 +830,10 @@ const ProductModeration = () => {
                   pageNum = currentPage - 2 + i;
                 }
                 return (
-                  <button
+                  <motion.button
                     key={i}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => goToPage(pageNum)}
                     className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition ${currentPage === pageNum
                       ? 'bg-primary text-white shadow-sm'
@@ -690,23 +841,23 @@ const ProductModeration = () => {
                       }`}
                   >
                     {pageNum}
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <ChevronRight size={18} />
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       )}
-
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="light" />
-    </div>
+    </motion.div>
   );
 };
 

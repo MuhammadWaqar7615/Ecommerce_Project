@@ -169,7 +169,6 @@ textarea {
   min-height: 108px;
 }
 
-/* Make inputs expand to available width but keep comfortable max width */
 input[type="text"], input[type="email"], textarea, .input-field {
   width: 100%;
   max-width: 100%;

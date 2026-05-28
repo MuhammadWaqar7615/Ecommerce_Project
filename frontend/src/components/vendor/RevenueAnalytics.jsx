@@ -100,12 +100,19 @@ const RevenueAnalytics = () => {
 
       {/* Header with Period Filter */}
       <motion.div variants={cardVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Revenue Analytics</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Track your earnings and sales performance
-          </p>
-        </div>
+        <motion.div className="flex items-center gap-3 border-b border-gray-100">
+          <div className="p-2 bg-primary/10 rounded-xl">
+            <TrendingUp size={24} className="text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">
+              Revenue Analytics
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Track your earnings and sales performance
+            </p>
+          </div>
+        </motion.div>
         <div className="relative">
           <select
             value={period}

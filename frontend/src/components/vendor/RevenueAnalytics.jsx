@@ -120,7 +120,7 @@ const RevenueAnalytics = () => {
         </div>
       </motion.div>
 
-      {/* Stats Row */}
+      {/* Stats bar */}
       <motion.div
         variants={containerVariants}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 border-b border-gray-100 bg-gray-50/30"

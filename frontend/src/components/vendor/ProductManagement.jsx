@@ -292,6 +292,7 @@ const ProductManagement = () => {
                         <option value="stock_desc">Stock: High to Low</option>
                     </select>
                 </div>
+
                 <AnimatePresence>
                     {isFilterOpen && (
                         <motion.div variants={filterVariants} initial="hidden" animate="visible" exit="exit" className="mt-4 pt-4 border-t border-gray-200 overflow-hidden">

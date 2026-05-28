@@ -59,7 +59,7 @@ const VendorOverview = () => {
       try {
         const shopResult = await getShop();
         shopData = shopResult?.shop || null;
-      } catch (err) {}
+      } catch (err) { }
 
       let productsCount = 0;
       let activeProducts = 0;
@@ -76,7 +76,7 @@ const VendorOverview = () => {
           const products = productsData.products || [];
           productsCount = products.length;
           activeProducts = products.filter(p => p.status === 'active').length;
-        } catch (err) {}
+        } catch (err) { }
 
         // Orders
         try {
@@ -91,13 +91,13 @@ const VendorOverview = () => {
             const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
             averageOrderValue = totalRevenue / completedOrders.length;
           }
-        } catch (err) {}
+        } catch (err) { }
 
         // Earnings
         try {
           const revenueData = await getRevenueAnalytics(timeRange);
           totalEarnings = revenueData.totalEarnings || 0;
-        } catch (err) {}
+        } catch (err) { }
       }
 
       setStats({
@@ -121,7 +121,13 @@ const VendorOverview = () => {
     fetchOverviewData();
   }, [fetchOverviewData]);
 
-  if (loading) return <AnimatedLoader size="lg" label="Loading vendor dashboard..." />;
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-160px)] flex items-center justify-center">
+        <AnimatedLoader size="lg" label="Loading Content..." />
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -263,11 +269,10 @@ const VendorOverview = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setTimeRange(range)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${
-                timeRange === range
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${timeRange === range
                   ? 'bg-primary text-white shadow-md'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+                }`}
             >
               {range}
             </motion.button>

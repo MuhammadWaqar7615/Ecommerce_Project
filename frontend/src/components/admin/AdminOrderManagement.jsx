@@ -182,7 +182,7 @@ const AdminOrderManagement = () => {
     };
 
     const getStatusIcon = (status) => {
-        switch(status) {
+        switch (status) {
             case 'Pending': return <Package size={12} />;
             case 'Processing': return <Package size={12} />;
             case 'Shipped': return <Package size={12} />;
@@ -199,7 +199,11 @@ const AdminOrderManagement = () => {
     );
 
     if (loading) {
-        return <AnimatedLoader size="lg" label="Loading orders..." />;
+        return (
+            <div className="min-h-[calc(100vh-160px)] flex items-center justify-center">
+                <AnimatedLoader size="lg" label="Loading Content..." />
+            </div>
+        );
     }
 
     return (
@@ -209,32 +213,28 @@ const AdminOrderManagement = () => {
             variants={containerVariants}
             className="bg-white rounded-2xl shadow-sm"
         >
-            <ToastContainer 
-                position="top-right" 
-                autoClose={3000} 
-                hideProgressBar={false} 
-                newestOnTop 
-                closeOnClick 
-                rtl={false} 
-                pauseOnFocusLoss 
-                draggable 
-                pauseOnHover 
-                theme="light" 
+            <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
             />
 
             {/* Header */}
             <motion.div variants={cardVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 border-b border-gray-100">
                 <div>
                     <h2 className="text-xl font-bold text-gray-800">Order Management</h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                        {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''} found
-                        {hasActiveFilters && ' (filtered)'}
-                    </p>
                 </div>
             </motion.div>
 
             {/* Statistics Row */}
-            <motion.div 
+            <motion.div
                 variants={containerVariants}
                 className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-6 border-b border-gray-100 bg-gray-50/30"
             >
@@ -243,7 +243,7 @@ const AdminOrderManagement = () => {
                         <ShoppingBag size={18} className="text-blue-600" />
                     </div>
                     <div>
-                        <motion.p 
+                        <motion.p
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -254,13 +254,13 @@ const AdminOrderManagement = () => {
                         <p className="text-xs text-gray-500">Total Orders</p>
                     </div>
                 </motion.div>
-                
+
                 <motion.div variants={statCardVariants} whileHover="hover" className="flex items-center gap-3 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                     <div className="p-2 bg-green-100 rounded-lg">
                         <DollarSign size={18} className="text-green-600" />
                     </div>
                     <div>
-                        <motion.p 
+                        <motion.p
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 10, delay: 0.1 }}
@@ -271,13 +271,13 @@ const AdminOrderManagement = () => {
                         <p className="text-xs text-gray-500">Total Revenue</p>
                     </div>
                 </motion.div>
-                
+
                 <motion.div variants={statCardVariants} whileHover="hover" className="flex items-center gap-3 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                     <div className="p-2 bg-yellow-100 rounded-lg">
                         <Package size={18} className="text-yellow-600" />
                     </div>
                     <div>
-                        <motion.p 
+                        <motion.p
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 10, delay: 0.2 }}
@@ -288,13 +288,13 @@ const AdminOrderManagement = () => {
                         <p className="text-xs text-gray-500">Pending</p>
                     </div>
                 </motion.div>
-                
+
                 <motion.div variants={statCardVariants} whileHover="hover" className="flex items-center gap-3 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                     <div className="p-2 bg-teal-100 rounded-lg">
                         <Users size={18} className="text-teal-600" />
                     </div>
                     <div>
-                        <motion.p 
+                        <motion.p
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 10, delay: 0.3 }}
@@ -340,14 +340,14 @@ const AdminOrderManagement = () => {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition whitespace-nowrap ${isFilterOpen || hasActiveFilters
-                                ? 'bg-primary text-white border-primary'
-                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                             }`}
                     >
                         <FilterIcon size={18} />
                         Filters
                         {hasActiveFilters && (
-                            <motion.span 
+                            <motion.span
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 className="ml-1 w-5 h-5 bg-white text-primary rounded-full text-xs flex items-center justify-center"
@@ -498,15 +498,15 @@ const AdminOrderManagement = () => {
                                                                 <p className="text-xs text-gray-400">+{order.items.length - 2} more</p>
                                                             )}
                                                         </div>
-                                                     </td>
+                                                    </td>
                                                     <td className="px-4 py-3">
                                                         <p className="font-semibold text-gray-800">{formatPrice(order.totalAmount)}</p>
-                                                     </td>
+                                                    </td>
                                                     <td className="px-4 py-3">
                                                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-700'}`}>
                                                             {order.status}
                                                         </span>
-                                                     </td>
+                                                    </td>
                                                     <td className="px-4 py-3">
                                                         <div className="flex items-center gap-1.5">
                                                             <Calendar size={12} className="text-gray-400" />
@@ -518,7 +518,7 @@ const AdminOrderManagement = () => {
                                                                 })}
                                                             </p>
                                                         </div>
-                                                     </td>
+                                                    </td>
                                                     <td className="px-4 py-3">
                                                         <div className="flex items-center justify-center">
                                                             <motion.button
@@ -534,7 +534,7 @@ const AdminOrderManagement = () => {
                                                                 <Eye size={16} />
                                                             </motion.button>
                                                         </div>
-                                                     </td>
+                                                    </td>
                                                 </motion.tr>
 
                                                 {/* Expanded Row - Order Details */}
@@ -584,7 +584,7 @@ const AdminOrderManagement = () => {
                                                                             <p><span className="text-gray-500">Email:</span> <span className="font-medium">{order.customerId?.email || 'N/A'}</span></p>
                                                                             <p><span className="text-gray-500">Phone:</span> <span className="font-medium">{order.customerId?.phone || 'N/A'}</span></p>
                                                                         </div>
-                                                                        
+
                                                                         {order.shippingAddress && (
                                                                             <>
                                                                                 <h4 className="text-sm font-semibold text-gray-700 mt-3 mb-2 flex items-center gap-2">
@@ -613,7 +613,7 @@ const AdminOrderManagement = () => {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100"
@@ -652,8 +652,8 @@ const AdminOrderManagement = () => {
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => goToPage(pageNum)}
                                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${currentPage === pageNum
-                                                            ? 'bg-primary text-white shadow-sm'
-                                                            : 'text-gray-600 hover:bg-gray-100'
+                                                        ? 'bg-primary text-white shadow-sm'
+                                                        : 'text-gray-600 hover:bg-gray-100'
                                                         }`}
                                                 >
                                                     {pageNum}

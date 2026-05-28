@@ -1,18 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedLoader from '../common/AnimatedLoader';
-import { Save, Building } from 'lucide-react';
+import AlertConfirmation from '../common/AlertConfirmation';
+import { Save, Building, Edit, CheckCircle, XCircle, AlertCircle, Store } from 'lucide-react';
 import { getShop, createShop, updateShop } from '../../services/vendor';
 
 const ShopManagement = () => {
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDiscardAlert, setShowDiscardAlert] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState({
     shopName: '',
     description: '',
     contactPhone: '',
     contactEmail: '',
   });
+  const [originalData, setOriginalData] = useState({});
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
+  const formFieldVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+  };
 
   useEffect(() => {
     fetchShop();
@@ -21,13 +45,16 @@ const ShopManagement = () => {
   const fetchShop = async () => {
     try {
       const data = await getShop();
-      setShop(data.shop);
-      setFormData({
-        shopName: data.shop.shopName || '',
-        description: data.shop.description || '',
-        contactPhone: data.shop.contactPhone || '',
-        contactEmail: data.shop.contactEmail || '',
-      });
+      const shopData = data.shop;
+      setShop(shopData);
+      const newFormData = {
+        shopName: shopData.shopName || '',
+        description: shopData.description || '',
+        contactPhone: shopData.contactPhone || '',
+        contactEmail: shopData.contactEmail || '',
+      };
+      setFormData(newFormData);
+      setOriginalData(newFormData);
     } catch (error) {
       console.error('No shop found');
     } finally {
@@ -36,7 +63,10 @@ const ShopManagement = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+    const isChanged = Object.keys(newFormData).some(key => newFormData[key] !== originalData[key]);
+    setHasChanges(isChanged);
   };
 
   const handleSubmit = async (e) => {
@@ -45,6 +75,8 @@ const ShopManagement = () => {
     try {
       if (shop) {
         await updateShop(formData);
+        setOriginalData({ ...formData });
+        setHasChanges(false);
         alert('Shop updated successfully!');
       } else {
         await createShop(formData);
@@ -58,83 +90,186 @@ const ShopManagement = () => {
     }
   };
 
+  const handleDiscard = () => {
+    setFormData({ ...originalData });
+    setHasChanges(false);
+    setShowDiscardAlert(false);
+  };
+
+  // Centered loader while loading
   if (loading) {
-    return <AnimatedLoader size="lg" label="Loading shop details..." />;
+    return (
+      <div className="min-h-[calc(100vh-160px)] flex items-center justify-center">
+        <AnimatedLoader size="lg" label="Loading Content..." />
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-6">
-        {shop ? 'Edit Your Shop' : 'Create Your Shop'}
-      </h2>
-
-      <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Shop Name *</label>
-          <input
-            type="text"
-            name="shopName"
-            required
-            className="input-field"
-            value={formData.shopName}
-            onChange={handleChange}
-            placeholder="e.g., Khanewal Traditional Crafts"
-          />
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="bg-white rounded-2xl shadow-sm overflow-hidden"
+    >
+      {/* Header */}
+      <motion.div variants={cardVariants} className="flex items-center gap-3 p-6 border-b border-gray-100">
+        <div className="p-2 bg-primary/10 rounded-xl">
+          <Store size={24} className="text-primary" />
         </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
-            name="description"
-            rows="4"
-            className="input-field"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Describe your shop and what you sell..."
-          />
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">
+            {shop ? 'Edit Your Shop' : 'Create Your Shop'}
+          </h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {shop ? 'Update your store information' : 'Set up your store to start selling'}
+          </p>
         </div>
+      </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">Contact Phone *</label>
-            <input
-              type="tel"
-              name="contactPhone"
-              required
-              className="input-field"
-              value={formData.contactPhone}
-              onChange={handleChange}
-              placeholder="03001234567"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Contact Email *</label>
-            <input
-              type="email"
-              name="contactEmail"
-              required
-              className="input-field"
-              value={formData.contactEmail}
-              onChange={handleChange}
-              placeholder="shop@example.com"
-            />
-          </div>
-        </div>
+      <div className="p-6">
+        <form onSubmit={handleSubmit} className="max-w-3xl">
+          <motion.div variants={containerVariants} className="space-y-5">
+            {/* Shop Name */}
+            <motion.div variants={formFieldVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Shop Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="shopName"
+                required
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                value={formData.shopName}
+                onChange={handleChange}
+                placeholder="e.g., Khanewal Traditional Crafts"
+              />
+            </motion.div>
 
-        <button type="submit" disabled={saving} className="btn-primary">
-          <Save size={18} className="inline mr-2" />
-          {saving ? 'Saving...' : shop ? 'Update Shop' : 'Create Shop'}
-        </button>
-      </form>
+            {/* Description */}
+            <motion.div variants={formFieldVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Description
+              </label>
+              <textarea
+                name="description"
+                rows="4"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition resize-none"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Describe your shop, what you sell, your story..."
+              />
+            </motion.div>
 
-      {shop && (
-        <div className="mt-8 p-4 bg-green-50 rounded-lg">
-          <h3 className="font-semibold text-green-800 mb-2">Shop Status</h3>
-          <p className="text-green-700">✓ Your shop is active and visible to customers</p>
-          <p className="text-sm text-green-600 mt-2">Manage your products from the Products tab</p>
-        </div>
-      )}
-    </div>
+            {/* Contact Fields Grid */}
+            <motion.div variants={formFieldVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Contact Phone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="contactPhone"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                  value={formData.contactPhone}
+                  onChange={handleChange}
+                  placeholder="03001234567"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Contact Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="contactEmail"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                  value={formData.contactEmail}
+                  onChange={handleChange}
+                  placeholder="shop@example.com"
+                />
+              </div>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <motion.div variants={formFieldVariants} className="flex flex-wrap gap-3 pt-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={saving || (shop && !hasChanges)}
+                className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all ${saving || (shop && !hasChanges)
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary text-white shadow-sm hover:bg-primary-dark'
+                  }`}
+              >
+                {saving ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                  />
+                ) : (
+                  <Save size={18} />
+                )}
+                {saving ? 'Saving...' : shop ? 'Update Shop' : 'Create Shop'}
+              </motion.button>
+
+              {shop && hasChanges && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => setShowDiscardAlert(true)}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  <XCircle size={18} />
+                  Discard Changes
+                </motion.button>
+              )}
+            </motion.div>
+          </motion.div>
+        </form>
+
+        {/* Shop Status Banner */}
+        {shop && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 p-5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-1.5 bg-emerald-100 rounded-lg">
+                <CheckCircle size={20} className="text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-emerald-800">Shop Active</h3>
+                <p className="text-sm text-emerald-700 mt-1">
+                  Your shop is live and visible to customers.
+                </p>
+                <p className="text-xs text-emerald-600 mt-2">
+                  📦 Manage your products from the <strong>Products</strong> tab
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* AlertConfirmation for Discard Changes */}
+      <AlertConfirmation
+        isOpen={showDiscardAlert}
+        title="Discard Changes?"
+        message="You have unsaved changes. Are you sure you want to discard them?"
+        confirmText="Discard"
+        cancelText="Keep Editing"
+        onConfirm={handleDiscard}
+        onCancel={() => setShowDiscardAlert(false)}
+      />
+    </motion.div>
   );
 };
 

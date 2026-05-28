@@ -38,7 +38,7 @@ import ProductManagement from './components/vendor/ProductManagement';
 import OrderManagementVendor from './components/vendor/OrderManagementVendor';
 import RevenueAnalytics from './components/vendor/RevenueAnalytics';
 import CategoryManagement from './components/admin/CategoryManagement';
-import AddEditProduct from './pages/vendor/AddEditProduct';
+import AddEditProduct from './components/vendor/AddEditProduct';
 import AuthCallback from './components/auth/callbacks/AuthCallback';
 import PaymentSuccess from './pages/global/PaymentSuccess';
 

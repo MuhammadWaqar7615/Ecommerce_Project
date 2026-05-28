@@ -275,12 +275,14 @@ const ProductManagement = () => {
                         <input type="text" placeholder="Search by product name or description..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white" />
                         {searchTerm && <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={16} /></button>}
                     </div>
+
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setIsFilterOpen(!isFilterOpen)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition whitespace-nowrap ${isFilterOpen || hasActiveFilters ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
                         <Filter size={18} />
                         Filters
                         {hasActiveFilters && <span className="ml-1 w-5 h-5 bg-white text-primary rounded-full text-xs flex items-center justify-center">{[searchTerm, categoryFilter, statusFilter, stockFilter].filter(Boolean).length}</span>}
                         <motion.div animate={{ rotate: isFilterOpen ? 180 : 0 }} transition={{ duration: 0.3 }}><ChevronDown size={16} /></motion.div>
                     </motion.button>
+                    
                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>

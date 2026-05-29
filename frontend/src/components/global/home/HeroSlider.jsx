@@ -6,7 +6,6 @@ import img2 from '../../../assets/delights-1.webp';
 import img3 from '../../../assets/shoes-1.webp';
 import img4 from '../../../assets/home-decors-1.webp';
 
-
 const slides = [
   { id: 1, image: img1, title: "Traditional Attire", subtitle: "Embrace Cultural Elegance" },
   { id: 2, image: img2, title: "Artisanal Delights", subtitle: "Handcrafted with Love" },

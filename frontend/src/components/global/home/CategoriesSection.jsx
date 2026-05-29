@@ -7,6 +7,7 @@ import AnimatedLoader from '../../common/AnimatedLoader';
 // import { getPopularCategories } from '../../../services/category';
 import { getPopularCategories } from '../../../services/getPopularCat';
 
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }

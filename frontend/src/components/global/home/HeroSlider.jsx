@@ -152,6 +152,7 @@ const HeroSlider = () => {
             >
               {slides[currentIndex].subtitle}
             </motion.p>
+            
             <motion.div
               className="flex gap-4"
               initial={{ opacity: 0, y: 20 }}

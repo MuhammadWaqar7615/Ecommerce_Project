@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaStore } from 'react-icons/fa';
 import { formatPrice } from '../../utils/formatPrice';
 
 const ProductCard = ({ product }) => {
@@ -26,6 +27,12 @@ const ProductCard = ({ product }) => {
       <div className="p-4">
         <div className="text-sm text-primary font-semibold mb-1">{product.category?.name || product.category || 'Uncategorized'}</div>
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.name}</h3>
+        {product.shopId?.shopName && (
+          <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
+            <FaStore className="shrink-0 text-primary/70" />
+            <span className="truncate">Sold by {product.shopId.shopName}</span>
+          </div>
+        )}
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
         <div className="flex justify-between items-center">
           <span className="text-xl font-bold text-primary">{formatPrice(product.price)}</span>

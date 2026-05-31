@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { register, loginWithGoogle } from '../../services/auth';
 import { validateEmail, validatePassword, validatePhone } from '../../utils/validateForm';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const defaultRole = searchParams.get('role') === 'vendor' ? 'vendor' : 'customer';
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     fullName: '',
     phone: '',
-    role: 'customer',
+    role: defaultRole,
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

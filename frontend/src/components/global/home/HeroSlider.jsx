@@ -1,10 +1,10 @@
 // HeroSlider.jsx - Debugged Version
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import img1 from '../../assets/clothes-1.webp';
-import img2 from '../../assets/delights-1.webp';
-import img3 from '../../assets/shoes-1.webp';
-import img4 from '../../assets/home-decors-1.webp';
+import img1 from '../../../assets/clothes-1.webp';
+import img2 from '../../../assets/delights-1.webp';
+import img3 from '../../../assets/shoes-1.webp';
+import img4 from '../../../assets/home-decors-1.webp';
 
 const slides = [
   { id: 1, image: img1, title: "Traditional Attire", subtitle: "Embrace Cultural Elegance" },
@@ -152,6 +152,7 @@ const HeroSlider = () => {
             >
               {slides[currentIndex].subtitle}
             </motion.p>
+            
             <motion.div
               className="flex gap-4"
               initial={{ opacity: 0, y: 20 }}

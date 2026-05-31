@@ -23,8 +23,37 @@ const resolveCategoryFilter = async (categoryValue) => {
 // Get dynamic categories from category collection
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().sort({ name: 1 });
-    successResponse(res, { categories });
+    const categoryCounts = await Product.aggregate([
+      {
+        $match: {
+          isVisible: true,
+          stock: { $gt: 0 },
+          category: { $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: '$category',
+          productCount: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          productCount: -1,
+        },
+      },
+    ]);
+
+    const categoryIds = categoryCounts.map((entry) => entry._id);
+    const categories = await Category.find({ _id: { $in: categoryIds } }).sort({ name: 1 });
+    const countMap = new Map(categoryCounts.map((entry) => [String(entry._id), entry.productCount]));
+
+    const categoriesWithCounts = categories.map((category) => ({
+      ...category.toObject(),
+      productCount: countMap.get(String(category._id)) || 0,
+    }));
+
+    successResponse(res, { categories: categoriesWithCounts });
   } catch (error) {
     console.error('Error fetching categories:', error);
     errorResponse(res, error.message, 500);

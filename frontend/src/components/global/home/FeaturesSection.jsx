@@ -50,6 +50,7 @@ const FeaturesSection = () => {
             );
           })}
         </motion.div>
+        
       </div>
     </section>
   );

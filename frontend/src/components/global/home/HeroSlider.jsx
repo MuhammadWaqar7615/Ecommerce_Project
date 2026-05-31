@@ -192,6 +192,7 @@ const HeroSlider = () => {
             </span>
           </button>
         ))}
+        
       </div>
     </div>
   );

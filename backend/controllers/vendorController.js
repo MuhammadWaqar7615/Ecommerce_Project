@@ -42,7 +42,7 @@ const createShop = async (req, res) => {
 // Get shop
 const getShop = async (req, res) => {
   try {
-    const shop = await Shop.findOne({ vendorId: req.user._id });
+    const shop = await Shop.findOne({ vendorId: req?.user?._id });
     if (!shop) return errorResponse(res, 'Shop not found', 404);
     successResponse(res, { shop });
   } catch (error) {
@@ -50,6 +50,16 @@ const getShop = async (req, res) => {
   }
 };
 
+
+const getShopLocationById = async (req, res) => {
+  try {
+    const shop = await Shop.findById(req.params.id);
+    if (!shop) return errorResponse(res, 'Shop not found', 404);
+    successResponse(res, { location: shop.location });
+  } catch (error) {
+    errorResponse(res, error.message);
+  }
+};
 // Update shop
 const updateShop = async (req, res) => {
   try {
@@ -351,4 +361,5 @@ module.exports = {
   getOrders,
   updateOrderStatus,
   getRevenueAnalytics,
+  getShopLocationById,  // ← NEW EXPORT
 };

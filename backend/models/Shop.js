@@ -20,6 +20,13 @@ const shopSchema = new mongoose.Schema({
   banner: String,
   contactPhone: String,
   contactEmail: String,
+  location: {
+    address: String,
+    city: String,
+    state: String,
+    latitude: Number,
+    longitude: Number,
+  },
   isActive: {
     type: Boolean,
     default: true,

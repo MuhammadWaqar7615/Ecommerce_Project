@@ -11,6 +11,15 @@ export const getShop = async () => {
   }
 };
 
+export const getShopLocationById = async (shopId) => {
+  try {
+    const response = await api.get(`/customer/shop/${shopId}/location`);
+    return handleResponse(response);
+  } catch (error) {
+    throw new Error(handleError(error
+));  }
+}
+
 export const createShop = async (shopData) => {
   try {
     const response = await api.post('/vendor/shop', shopData);

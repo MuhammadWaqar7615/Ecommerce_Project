@@ -22,10 +22,10 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
                 };
             case 'info':
                 return {
-                    icon: <Shield size={24} className="text-blue-600" />,
-                    iconBg: 'bg-blue-100',
-                    confirmBtn: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
-                    borderColor: 'border-blue-200'
+                    icon: <Check size={24} className="text-primary" />,
+                    iconBg: 'bg-primary/10',
+                    confirmBtn: 'bg-primary hover:bg-primary-dark focus:ring-primary',
+                    borderColor: 'border-primary/20'
                 };
             case 'suspend':
                 return {
@@ -45,7 +45,7 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
                 return {
                     icon: <AlertTriangle size={24} className="text-primary" />,
                     iconBg: 'bg-primary/10',
-                    confirmBtn: 'bg-primary hover:bg-primary/90 focus:ring-primary',
+                    confirmBtn: 'bg-primary hover:bg-primary-dark focus:ring-primary',
                     borderColor: 'border-primary/20'
                 };
         }
@@ -63,6 +63,8 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
         visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 25 } },
         exit: { opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.2 } }
     };
+
+    if (!isOpen) return null;
 
     return (
         <AnimatePresence>
@@ -100,7 +102,7 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
                             </button>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer - Always show both buttons for confirmation */}
                         <div className="p-6 flex gap-3 justify-end">
                             <button
                                 onClick={onClose}

@@ -6,17 +6,47 @@ import { createOrder } from '../../services/order';
 import { getStripePublicKey } from '../../services/payment';
 import StripePaymentForm from '../../components/common/StripePaymentForm';
 import { formatPrice } from '../../utils/formatPrice';
+import { getShop, getShopLocationById } from '../../services/vendor';
+import { getLocationSuggestions } from '../../utils/locationApi';
 
 const Checkout = () => {
   const { cart, loadCart, loading: cartLoading } = useCart();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
-    street: '',
-    city: 'Khanewal',
-    district: '',
-    postalCode: '',
+    address: '',
+    state: 'Khanewal',
+    latitude: null,
+    longitude: null,
   });
+
+  const [shopsLocation, setShopsLocation] = useState([]);
+  console.log(cart)
+  const shopId= cart?.items?.map(item=>item.productId?.shopId) || []
+  console.log(shopId)
+  const getShopLocation = async (id) => {
+    if (!id ) return null;
+    const shop= await getShopLocationById(id);
+    console.log(shop)
+    return shop || null;
+  }
+  useEffect(()=>{
+    const fetchLocations= async()=>{
+      if(shopId && shopId.length>0){
+        const locations = await Promise.all(shopId.map(id => getShopLocation(id)));
+        console.log(locations)
+        setShopsLocation(locations.filter(loc => loc !== null));
+      }
+    }
+    fetchLocations();
+  }
+  ,[shopId.length])
+
+  console.log(shopsLocation)
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+
   const [shippingDistance, setShippingDistance] = useState(5);
   const [step, setStep] = useState('shipping'); // 'shipping' or 'payment'
   const [orderId, setOrderId] = useState(null);
@@ -32,6 +62,8 @@ const Checkout = () => {
   const safeDistance = Number.isNaN(Number(shippingDistance)) ? 0 : Number(shippingDistance);
   const shippingFee = 150 + safeDistance * 10;
   const total = subtotal + shippingFee;
+
+
 
   // Load Stripe public key when needed
   useEffect(() => {
@@ -102,6 +134,28 @@ const Checkout = () => {
     return null;
   }
 
+
+  const handleAddressChange = async (e) => {
+    const address = e.target.value;
+    setShippingAddress((prev) => ({ ...prev, address }));
+    if (e.target.value.length > 2) {
+      const suggestions= await getLocationSuggestions(e.target.value, { limit: 5, country: 'pk' });
+      setSuggestions(suggestions);
+      setShowSuggestions(true);
+
+  }}
+  console.log(shippingAddress)
+
+
+  const handleSuggestionClick = (suggestion) => {
+    setShippingAddress((prev) => ({
+      ...prev,
+      address: suggestion.placeName,
+      latitude: suggestion.latitude,
+      longitude: suggestion.longitude,
+    }));
+    setShowSuggestions(false);
+  };
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Checkout</h1>
@@ -116,16 +170,27 @@ const Checkout = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Street Address *</label>
+                  <label className="block text-sm font-medium mb-1">Shipping Address *</label>
                   <input
                     type="text"
                     required
                     className="input-field"
-                    value={shippingAddress.street}
-                    onChange={(e) =>
-                      setShippingAddress({ ...shippingAddress, street: e.target.value })
-                    }
+                    value={shippingAddress.address}
+                    onChange={handleAddressChange}
                   />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <ul className="mt-2 border rounded-md">
+                      {suggestions.map((suggestion, index) => (
+                        <li
+                          key={index}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={()=>handleSuggestionClick(suggestion)}
+                        >
+                          {suggestion?.placeName}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 <div>

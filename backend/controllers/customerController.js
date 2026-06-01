@@ -8,6 +8,7 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { calculateShippingFee } = require('../services/shippingService');
 const { calculateVendorEarnings } = require('../services/commissionService');
 const generateOrderNumber = require('../utils/generateOrderNumber');
+const Shop = require('../models/Shop');
 
 const resolveCategoryFilter = async (categoryValue) => {
   if (!categoryValue) return null;
@@ -343,6 +344,18 @@ const addReview = async (req, res) => {
   }
 };
 
+
+const getShopLocationById = async (req, res) => {
+  try {
+    const shop = await Shop.findById(req.params.id);
+    if (!shop) return errorResponse(res, 'Shop not found', 404);
+    successResponse(res, { location: shop.location });
+  }
+  catch (error) {
+    errorResponse(res, error.message);
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -355,4 +368,5 @@ module.exports = {
   getOrderById,
   cancelOrder,
   addReview,
+  getShopLocationById,
 };

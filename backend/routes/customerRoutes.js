@@ -14,6 +14,7 @@ const {
   getOrderById,
   cancelOrder,
   addReview,
+  getShopLocationById,
 } = require('../controllers/customerController');
 
 router.use(protect);
@@ -30,5 +31,6 @@ router.get('/orders', getOrders);
 router.get('/orders/:id', getOrderById);
 router.post('/orders/:id/cancel', cancelOrder);
 router.post('/reviews', addReview);
+router.get('/shop/:id/location', getShopLocationById);  // ← NEW ROUTE FOR LOCATION
 
 module.exports = router;

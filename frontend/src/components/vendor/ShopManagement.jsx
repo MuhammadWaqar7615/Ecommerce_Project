@@ -4,6 +4,7 @@ import AnimatedLoader from '../common/AnimatedLoader';
 import AlertConfirmation from '../common/AlertConfirmation';
 import { Save, Building, Edit, CheckCircle, XCircle, AlertCircle, Store } from 'lucide-react';
 import { getShop, createShop, updateShop } from '../../services/vendor';
+import { getLocationSuggestions } from '../../utils/locationApi';
 
 const ShopManagement = () => {
   const [shop, setShop] = useState(null);
@@ -16,9 +17,13 @@ const ShopManagement = () => {
     description: '',
     contactPhone: '',
     contactEmail: '',
+    location: {
+      address: '',
+    },
   });
   const [originalData, setOriginalData] = useState({});
-
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -47,11 +52,18 @@ const ShopManagement = () => {
       const data = await getShop();
       const shopData = data.shop;
       setShop(shopData);
+      console.log('Fetched shop data:', shopData);
       const newFormData = {
         shopName: shopData.shopName || '',
         description: shopData.description || '',
         contactPhone: shopData.contactPhone || '',
         contactEmail: shopData.contactEmail || '',
+        location: {
+          address: shopData.location?.address || '',
+          latitude: shopData.location?.latitude || null,
+          longitude: shopData.location?.longitude || null,
+          state: shopData.location?.state || '',
+        } || '',
       };
       setFormData(newFormData);
       setOriginalData(newFormData);
@@ -62,10 +74,23 @@ const ShopManagement = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const newFormData = { ...formData, [e.target.name]: e.target.value };
-    setFormData(newFormData);
-    const isChanged = Object.keys(newFormData).some(key => newFormData[key] !== originalData[key]);
+  const handleChange = async (e) => {
+    if(e.target.name === 'location') {
+      setFormData({ ...formData, location: { ...formData.location, address: e.target.value } });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
+    if (e.target.name === 'location' && e.target.value.length > 2) {
+      const results = await getLocationSuggestions(e.target.value);
+      console.log('Location suggestions:', results);
+      setSuggestions(results);
+      setShowSuggestion(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestion(false);
+    }
+
+    const isChanged = Object.keys(formData).some(key => formData[key] !== originalData[key]);
     setHasChanges(isChanged);
   };
 
@@ -95,6 +120,11 @@ const ShopManagement = () => {
     setHasChanges(false);
     setShowDiscardAlert(false);
   };
+
+const handleSuggestionClick = (suggestion) => {
+  setFormData({ ...formData, location: { ...formData.location, address: suggestion.placeName, latitude: suggestion.latitude, longitude: suggestion.longitude, state: suggestion.context?.find(ctx => ctx.id.startsWith('region'))?.text || '' } });
+  setShowSuggestion(false);
+};
 
   // Centered loader while loading
   if (loading) {
@@ -193,6 +223,37 @@ const ShopManagement = () => {
               </div>
             </motion.div>
 
+            {/* Location */}
+            <motion.div variants={formFieldVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Location
+              </label>
+              <input
+                type="text"
+                name="location"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                value={formData.location?.address || ''}
+                onChange={handleChange}
+                placeholder="e.g., Khanewal, Punjab, Pakistan"
+              />
+              {showSuggestion && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-2 p-3 bg-blue-100flex flex-col border border-blue-200 rounded-lg"
+                >
+                        {suggestions.map(suggestion => (
+                          <div
+                            key={suggestion.id}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                          >
+                            {suggestion.placeName}
+                          </div>
+                        ))}
+                </motion.div>
+              )}
+            </motion.div>
+
             {/* Action Buttons */}
             <motion.div variants={formFieldVariants} className="flex flex-wrap gap-3 pt-4">
               <motion.button
@@ -201,8 +262,8 @@ const ShopManagement = () => {
                 type="submit"
                 disabled={saving || (shop && !hasChanges)}
                 className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all ${saving || (shop && !hasChanges)
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'bg-primary text-white shadow-sm hover:bg-primary-dark'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-primary text-white shadow-sm hover:bg-primary-dark'
                   }`}
               >
                 {saving ? (

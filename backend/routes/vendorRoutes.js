@@ -18,8 +18,11 @@ const {
   getOrders,
   updateOrderStatus,
   getRevenueAnalytics,
+  getShopLocationById,  // ← NEW CONTROLLER FUNCTION
 } = require('../controllers/vendorController');
 
+
+router.get('/shop/:id/location', getShopLocationById);  // ← NEW ROUTE FOR LOCATION
 router.use(protect);
 router.use(authorize('vendor'));
 

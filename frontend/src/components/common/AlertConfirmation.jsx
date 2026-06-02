@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X, Check, Shield, Trash2, UserX, UserCheck } from 'lucide-react';
+import { AlertTriangle, X, Check, Shield, Trash2, UserX, UserCheck, LogIn } from 'lucide-react';
 
 const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 'warning', confirmText = 'Confirm', cancelText = 'Cancel', loading = false }) => {
     
@@ -11,42 +11,48 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
                     icon: <Trash2 size={24} className="text-red-600" />,
                     iconBg: 'bg-red-100',
                     confirmBtn: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
-                    borderColor: 'border-red-200'
+                    borderColor: 'border-red-200',
+                    headerBg: 'bg-red-50/50'
                 };
             case 'warning':
                 return {
-                    icon: <AlertTriangle size={24} className="text-yellow-600" />,
-                    iconBg: 'bg-yellow-100',
-                    confirmBtn: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
-                    borderColor: 'border-yellow-200'
+                    icon: <LogIn size={24} className="text-primary" />,
+                    iconBg: 'bg-primary/10',
+                    confirmBtn: 'bg-primary hover:bg-primary-dark focus:ring-primary',
+                    borderColor: 'border-primary/20',
+                    headerBg: 'bg-primary/5'
                 };
             case 'info':
                 return {
                     icon: <Check size={24} className="text-primary" />,
                     iconBg: 'bg-primary/10',
                     confirmBtn: 'bg-primary hover:bg-primary-dark focus:ring-primary',
-                    borderColor: 'border-primary/20'
+                    borderColor: 'border-primary/20',
+                    headerBg: 'bg-primary/5'
                 };
             case 'suspend':
                 return {
                     icon: <UserX size={24} className="text-orange-600" />,
                     iconBg: 'bg-orange-100',
                     confirmBtn: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500',
-                    borderColor: 'border-orange-200'
+                    borderColor: 'border-orange-200',
+                    headerBg: 'bg-orange-50/50'
                 };
             case 'activate':
                 return {
                     icon: <UserCheck size={24} className="text-green-600" />,
                     iconBg: 'bg-green-100',
                     confirmBtn: 'bg-green-600 hover:bg-green-700 focus:ring-green-500',
-                    borderColor: 'border-green-200'
+                    borderColor: 'border-green-200',
+                    headerBg: 'bg-green-50/50'
                 };
             default:
                 return {
                     icon: <AlertTriangle size={24} className="text-primary" />,
                     iconBg: 'bg-primary/10',
                     confirmBtn: 'bg-primary hover:bg-primary-dark focus:ring-primary',
-                    borderColor: 'border-primary/20'
+                    borderColor: 'border-primary/20',
+                    headerBg: 'bg-primary/5'
                 };
         }
     };
@@ -86,8 +92,8 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className={`p-6 flex items-center gap-4 border-b ${styles.borderColor}`}>
-                            <div className={`w-12 h-12 ${styles.iconBg} rounded-xl flex items-center justify-center`}>
+                        <div className={`p-6 flex items-center gap-4 border-b ${styles.borderColor} ${styles.headerBg}`}>
+                            <div className={`w-12 h-12 ${styles.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
                                 {styles.icon}
                             </div>
                             <div className="flex-1">
@@ -96,25 +102,27 @@ const AlertConfirmation = ({ isOpen, onClose, onConfirm, title, message, type = 
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white/80 rounded-lg transition self-start"
                             >
                                 <X size={18} />
                             </button>
                         </div>
 
-                        {/* Footer - Always show both buttons for confirmation */}
-                        <div className="p-6 flex gap-3 justify-end">
-                            <button
-                                onClick={onClose}
-                                disabled={loading}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
-                            >
-                                {cancelText}
-                            </button>
+                        {/* Footer */}
+                        <div className="px-6 py-4 flex gap-3 justify-end bg-gray-50/50">
+                            {cancelText && (
+                                <button
+                                    onClick={onClose}
+                                    disabled={loading}
+                                    className="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:border-gray-300 transition disabled:opacity-50"
+                                >
+                                    {cancelText}
+                                </button>
+                            )}
                             <button
                                 onClick={onConfirm}
                                 disabled={loading}
-                                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition shadow-sm focus:ring-2 focus:ring-offset-2 ${styles.confirmBtn} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                                className={`px-5 py-2 text-sm font-medium text-white rounded-full transition shadow-sm focus:ring-2 focus:ring-offset-2 ${styles.confirmBtn} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                             >
                                 {loading ? (
                                     <>

@@ -161,7 +161,7 @@ const Header = ({
   // For global pages
   return (
     <header className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
-      <div className="container mx-auto px-4">
+      <div className="container max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between py-3">
           <Link to="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-white">
             <img src="/logo.svg" alt="Logo" width={48} height={48} />

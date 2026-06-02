@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import Header from '../../components/common/Header';
+import Footer from '../../components/common/Footer';
 import ProductCard from '../../components/common/ProductCard';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { getPublicProducts, getCategories } from '../../services/product';
+import { ChevronLeft } from 'lucide-react';
+import { motion } from 'framer-motion'
 
 const ProductListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,6 +15,7 @@ const ProductListing = () => {
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+  const Navigate = useNavigate();
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
     minPrice: searchParams.get('minPrice') || '',
@@ -52,7 +57,7 @@ const ProductListing = () => {
         ...filters,
       };
       Object.keys(query).forEach(key => !query[key] && delete query[key]);
-      
+
       const data = await getPublicProducts(query);
       setProducts(data.products);
       setTotalPages(data.totalPages);
@@ -81,93 +86,110 @@ const ProductListing = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar Filters */}
-        <div className="md:w-1/4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Filters</h3>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Category</label>
-              <select
-                name="category"
-                value={filters.category}
-                onChange={handleFilterChange}
-                className="input-field"
-              >
-                <option value="">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat._id} value={cat._id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
+    <>
+      <Header variant="public" showSearch showCart />
+      <main className="container mx-auto px-4 py-8 mt-10">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-4 md:mb-6 mt-2"
+        >
+          <button
+            onClick={() => Navigate(-1)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all group text-sm md:text-base"
+          >
+            <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+            Back
+          </button>
+        </motion.div>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <div className="md:w-1/4">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4">Filters</h3>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Price Range</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  name="minPrice"
-                  placeholder="Min"
-                  value={filters.minPrice}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Category</label>
+                <select
+                  name="category"
+                  value={filters.category}
                   onChange={handleFilterChange}
                   className="input-field"
-                />
-                <input
-                  type="number"
-                  name="maxPrice"
-                  placeholder="Max"
-                  value={filters.maxPrice}
-                  onChange={handleFilterChange}
-                  className="input-field"
-                />
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(cat => (
+                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            <button onClick={clearFilters} className="btn-outline w-full">
-              Clear Filters
-            </button>
-          </div>
-        </div>
-
-        {/* Products Grid */}
-        <div className="md:w-3/4">
-          {loading ? (
-            <AnimatedLoader />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
-              
-              {products.length === 0 && (
-                <div className="text-center py-10">
-                  <p className="text-gray-500">No products found.</p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Price Range</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    name="minPrice"
+                    placeholder="Min"
+                    value={filters.minPrice}
+                    onChange={handleFilterChange}
+                    className="input-field"
+                  />
+                  <input
+                    type="number"
+                    name="maxPrice"
+                    placeholder="Max"
+                    value={filters.maxPrice}
+                    onChange={handleFilterChange}
+                    className="input-field"
+                  />
                 </div>
-              )}
+              </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded ${currentPage === page ? 'bg-primary text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-                    >
-                      {page}
-                    </button>
+              <button onClick={clearFilters} className="btn-outline w-full">
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
+          {/* Products Grid */}
+          <div className="md:w-3/4">
+            {loading ? (
+              <AnimatedLoader />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
                   ))}
                 </div>
-              )}
-            </>
-          )}
+
+                {products.length === 0 && (
+                  <div className="text-center py-10">
+                    <p className="text-gray-500">No products found.</p>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-8">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-4 py-2 rounded ${currentPage === page ? 'bg-primary text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+      <Footer />
+    </>
   );
 };
 

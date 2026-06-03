@@ -41,8 +41,12 @@ export async function getLocationSuggestions(query, options = {}) {
       params.append('country', country);
     }
 
-    url += `?${params.toString()}`;
+    if (options.proximity) {
+      params.append('proximity', options.proximity);
+    }
 
+    url += `?${params.toString()}`;
+    console.log('Fetching location suggestions from:', url);
     const response = await fetch(url);
     
     if (!response.ok) {

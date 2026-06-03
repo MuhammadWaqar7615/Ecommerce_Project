@@ -21,6 +21,7 @@ const {
   updateSetting,
 } = require('../controllers/adminController');
 
+router.get('/settings', getSettings);
 router.use(protect);
 router.use(authorize('admin'));
 
@@ -51,7 +52,6 @@ router.get('/orders', getAllOrders);
 router.get('/stats', getSystemStats);
 
 // Settings
-router.get('/settings', getSettings);
 router.put('/settings', updateSetting);
 
 module.exports = router;

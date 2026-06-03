@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
@@ -6,49 +6,60 @@ import { createOrder } from '../../services/order';
 import { getStripePublicKey } from '../../services/payment';
 import StripePaymentForm from '../../components/common/StripePaymentForm';
 import { formatPrice } from '../../utils/formatPrice';
-import { getShop, getShopLocationById } from '../../services/vendor';
-import { getLocationSuggestions } from '../../utils/locationApi';
+import { getShopLocationById } from '../../services/vendor';
+import { getLocationSuggestions, calculateDistance } from '../../utils/locationApi';
+import { getSettings } from '../../services/admin';
+import useDebounce from '../../hooks/useDebounce';
 
 const Checkout = () => {
   const { cart, loadCart, loading: cartLoading } = useCart();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
+    city: '',
     address: '',
-    state: 'Khanewal',
     latitude: null,
     longitude: null,
+    cityLat: null,
+    cityLng: null,
   });
 
   const [shopsLocation, setShopsLocation] = useState([]);
-  console.log(cart)
-  const shopId= cart?.items?.map(item=>item.productId?.shopId) || []
-  console.log(shopId)
-  const getShopLocation = async (id) => {
-    if (!id ) return null;
-    const shop= await getShopLocationById(id);
-    console.log(shop)
-    return shop || null;
-  }
-  useEffect(()=>{
-    const fetchLocations= async()=>{
-      if(shopId && shopId.length>0){
-        const locations = await Promise.all(shopId.map(id => getShopLocation(id)));
-        console.log(locations)
-        setShopsLocation(locations.filter(loc => loc !== null));
-      }
+ const shopIds = useMemo(
+  () => cart?.items?.map(item => item.productId?.shopId).filter(Boolean) || [],
+  [cart?.items]
+);
+  const [adminSettings, setAdminSettings] = useState(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  // Fetch shop locations whenever cart is loaded and shopIds are available
+useEffect(() => {
+  const fetchLocations = async () => {
+    // Also guard against cart.items being undefined/empty
+    console.log('Cart loading:', cartLoading, 'Cart items:', cart?.items); // Debugging line
+    if (cartLoading || !cart?.items || cart.items.length === 0) return;
+
+    const ids = cart.items.map(item => item.productId?.shopId).filter(Boolean);
+    if (ids.length === 0) {
+      setShopsLocation([]);
+      return;
     }
-    fetchLocations();
-  }
-  ,[shopId.length])
 
-  console.log(shopsLocation)
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+    const uniqueShopIds = [...new Set(ids)];
+    const locations = await Promise.all(uniqueShopIds.map(id => getShopLocationById(id)));
+    setShopsLocation(locations.filter(loc => loc !== null));
+  };
 
+  fetchLocations();
+}, [cartLoading, cart?.items, shippingAddress.city]); // depend on cart.items directly, not derived shopIds// Dependencies ensure fetch runs when cart loads or cart items change
 
-  const [shippingDistance, setShippingDistance] = useState(5);
-  const [step, setStep] = useState('shipping'); // 'shipping' or 'payment'
+  const [citySearchTerm, setCitySearchTerm] = useState('');
+  const debouncedCitySearchTerm = useDebounce(citySearchTerm, 500);
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+
+  const [shippingDistance, setShippingDistance] = useState(0);
+  const [step, setStep] = useState('shipping');
   const [orderId, setOrderId] = useState(null);
   const [stripePublicKey, setStripePublicKey] = useState(null);
   const [loadingKey, setLoadingKey] = useState(false);
@@ -59,13 +70,84 @@ const Checkout = () => {
   };
 
   const subtotal = calculateSubtotal();
-  const safeDistance = Number.isNaN(Number(shippingDistance)) ? 0 : Number(shippingDistance);
-  const shippingFee = 150 + safeDistance * 10;
+  const shippingBaseFee = adminSettings?.shipping_base_fee || 0;
+  const shippingPerKmRate = adminSettings?.shipping_per_km_rate || 0;
+  const maxDistanceForDelivery = adminSettings?.max_distance_for_delivery || 0;
+
+  const shippingFee = shippingBaseFee + Math.ceil(shippingDistance) * shippingPerKmRate;
   const total = subtotal + shippingFee;
 
+  // Fetch admin settings once
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLoadingSettings(true);
+        const settings = await getSettings();
+        setAdminSettings(settings.settings);
+      } catch (error) {
+        console.error('Error fetching admin settings:', error);
+        alert('Failed to load delivery settings. Please try again.');
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
+  // Fetch city suggestions
+  useEffect(() => {
+    const fetchCitySuggestions = async () => {
+      if (debouncedCitySearchTerm.length > 2) {
+        const suggestions = await getLocationSuggestions(debouncedCitySearchTerm, {
+          limit: 5,
+          country: 'pk',
+          types: 'place'
+        });
+        setCitySuggestions(suggestions);
+        setShowCitySuggestions(true);
+      } else {
+        setCitySuggestions([]);
+        setShowCitySuggestions(false);
+      }
+    };
+    fetchCitySuggestions();
+  }, [debouncedCitySearchTerm]);
 
-  // Load Stripe public key when needed
+  // Calculate distance when address/city changes and shops are loaded
+  useEffect(() => {
+    const updateDistance = async () => {
+      // Wait until we have shop locations and admin settings
+      if (shopsLocation.length === 0 || !adminSettings) return;
+
+      const targetLat = shippingAddress.latitude || shippingAddress.cityLat;
+      const targetLng = shippingAddress.longitude || shippingAddress.cityLng;
+
+      if (targetLat && targetLng) {
+        try {
+          const shopLoc = [shopsLocation[0].location.longitude, shopsLocation[0].location.latitude];
+          const distData = await calculateDistance([targetLng, targetLat], shopLoc);
+          const limitedDistance = Math.min(distData.distance, maxDistanceForDelivery);
+          setShippingDistance(limitedDistance);
+        } catch (error) {
+          console.error('Error calculating distance:', error);
+          setShippingDistance(0);
+        }
+      } else {
+        setShippingDistance(0);
+      }
+    };
+    updateDistance();
+  }, [
+    shippingAddress.latitude,
+    shippingAddress.longitude,
+    shippingAddress.cityLat,
+    shippingAddress.cityLng,
+    shopsLocation,
+    adminSettings,
+    maxDistanceForDelivery
+  ]);
+
+  // Load Stripe public key when moving to payment step
   useEffect(() => {
     if (step === 'payment' && !stripePublicKey && !loadingKey) {
       setLoadingKey(true);
@@ -82,15 +164,28 @@ const Checkout = () => {
 
   const handleSubmitShipping = async (e) => {
     e.preventDefault();
+    
+    const finalLat = shippingAddress.latitude || shippingAddress.cityLat;
+    const finalLng = shippingAddress.longitude || shippingAddress.cityLng;
+
+    if (!finalLat || !finalLng) {
+      alert('Please select a valid city from the suggestions');
+      return;
+    }
+    
     setSubmitting(true);
 
     try {
       const orderData = {
-        shippingAddress,
+        shippingAddress: {
+          address: shippingAddress.address,
+          city: shippingAddress.city,
+          latitude: finalLat,
+          longitude: finalLng
+        },
         shippingDistance,
       };
       const order = await createOrder(orderData);
-      console.log(order)
       setOrderId(order?.order?._id);
       setStep('payment');
     } catch (error) {
@@ -101,10 +196,7 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = (redirectUrl) => {
-    // Navigate to success page with payment details
-    console.log(redirectUrl)
-    // navigate(redirectUrl,{replace:true});
-    window.location.href=redirectUrl
+    window.location.href = redirectUrl;
   };
 
   const handlePaymentError = (error) => {
@@ -122,40 +214,51 @@ const Checkout = () => {
     }
   }, [cart, cartLoading, navigate]);
 
-  if (cartLoading) {
+  const handleCityChange = (e) => {
+    const city = e.target.value;
+    setCitySearchTerm(city);
+    setShippingAddress((prev) => ({
+      ...prev,
+      city,
+      address: '',
+      latitude: null,
+      longitude: null,
+      cityLat: null,
+      cityLng: null 
+    }));
+  };
+
+  const handleCitySuggestionClick = (suggestion) => {
+    setShippingAddress((prev) => ({
+      ...prev,
+      city: suggestion.text,
+      cityLat: suggestion.latitude,
+      cityLng: suggestion.longitude,
+      address: suggestion.placeName,
+    }));
+    setCitySearchTerm(suggestion.placeName);
+    setShowCitySuggestions(false);
+  };
+
+  const handleAddressInputChange = (e) => {
+    const address = e.target.value;
+    setShippingAddress((prev) => ({ ...prev, address }));
+  };
+
+  // Show loader while cart or settings are loading
+  if (cartLoading || loadingSettings) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <AnimatedLoader size="lg" label="Loading cart..." />
+        <AnimatedLoader size="lg" label="Loading cart and settings..." />
       </div>
     );
   }
 
+  // Redirect if cart is empty
   if (!cart?.items || cart.items.length === 0) {
     return null;
   }
 
-
-  const handleAddressChange = async (e) => {
-    const address = e.target.value;
-    setShippingAddress((prev) => ({ ...prev, address }));
-    if (e.target.value.length > 2) {
-      const suggestions= await getLocationSuggestions(e.target.value, { limit: 5, country: 'pk' });
-      setSuggestions(suggestions);
-      setShowSuggestions(true);
-
-  }}
-  console.log(shippingAddress)
-
-
-  const handleSuggestionClick = (suggestion) => {
-    setShippingAddress((prev) => ({
-      ...prev,
-      address: suggestion.placeName,
-      latitude: suggestion.latitude,
-      longitude: suggestion.longitude,
-    }));
-    setShowSuggestions(false);
-  };
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Checkout</h1>
@@ -164,100 +267,82 @@ const Checkout = () => {
         {/* Main Content */}
         <div className="lg:w-2/3">
           {step === 'shipping' ? (
-            // Shipping Form
             <form onSubmit={handleSubmitShipping} className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Shipping Address</h2>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Shipping Address *</label>
+                <div className="relative">
+                  <label className="block text-sm font-medium mb-1">City *</label>
                   <input
                     type="text"
                     required
+                    placeholder="Search city..."
                     className="input-field"
-                    value={shippingAddress.address}
-                    onChange={handleAddressChange}
+                    value={citySearchTerm}
+                    onChange={handleCityChange}
                   />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <ul className="mt-2 border rounded-md">
-                      {suggestions.map((suggestion, index) => (
+                  {showCitySuggestions && citySuggestions.length > 0 && (
+                    <ul className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                      {citySuggestions.map((suggestion, index) => (
                         <li
                           key={index}
-                          className="p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={()=>handleSuggestionClick(suggestion)}
+                          className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onClick={() => handleCitySuggestionClick(suggestion)}
                         >
-                          {suggestion?.placeName}
+                          {suggestion.placeName}
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">City *</label>
+                <div className="relative">
+                  <label className="block text-sm font-medium mb-1">Full Address / Street *</label>
                   <input
                     type="text"
                     required
-                    className="input-field"
-                    value={shippingAddress.city}
-                    onChange={(e) =>
-                      setShippingAddress({ ...shippingAddress, city: e.target.value })
-                    }
+                    disabled={!shippingAddress.cityLat}
+                    placeholder={shippingAddress.city ? "Enter street, building, area..." : "Please select city first"}
+                    className="input-field disabled:bg-gray-50"
+                    value={shippingAddress.address}
+                    onChange={handleAddressInputChange}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">District</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={shippingAddress.district}
-                    onChange={(e) =>
-                      setShippingAddress({ ...shippingAddress, district: e.target.value })
-                    }
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Estimated Distance (km)</label>
+                    <input
+                      type="text"
+                      readOnly
+                      className="input-field bg-gray-50 cursor-not-allowed"
+                      value={shippingDistance ? shippingDistance.toFixed(2) : '0'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Shipping Fee</label>
+                    <input
+                      type="text"
+                      readOnly
+                      className="input-field bg-gray-50 cursor-not-allowed"
+                      value={formatPrice(shippingFee)}
+                    />
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Postal Code</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={shippingAddress.postalCode}
-                    onChange={(e) =>
-                      setShippingAddress({ ...shippingAddress, postalCode: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Distance from Khanewal (km) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    max="50"
-                    className="input-field"
-                    value={shippingDistance}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      setShippingDistance(Number.isNaN(value) ? 1 : Math.max(1, Math.min(50, value)));
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Shipping fee: {formatPrice(150)} base + {formatPrice(10)}/km</p>
-                </div>
+                <p className="text-xs text-gray-500">
+                  Shipping fee: {formatPrice(shippingBaseFee)} base + {formatPrice(shippingPerKmRate)}/km (max {maxDistanceForDelivery}km)
+                </p>
               </div>
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !shippingAddress.cityLat}
                 className="btn-primary w-full mt-6 disabled:opacity-50"
               >
                 {submitting ? 'Creating order...' : 'Continue to Payment'}
               </button>
             </form>
           ) : (
-            // Payment Form
             <div className="bg-white rounded-lg shadow p-6">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">Payment</h2>
@@ -306,12 +391,12 @@ const Checkout = () => {
                   <span>Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Shipping ({shippingDistance}km)</span>
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping ({shippingDistance ? shippingDistance.toFixed(1) : 0}km)</span>
                   <span>{formatPrice(shippingFee)}</span>
                 </div>
                 <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between font-bold">
+                  <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
                     <span>{formatPrice(total)}</span>
                   </div>

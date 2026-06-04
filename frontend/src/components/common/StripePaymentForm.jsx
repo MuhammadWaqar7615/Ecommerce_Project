@@ -110,7 +110,7 @@ const StripePaymentForm = ({ publicKey, orderId, total, onSuccess, onError, isLo
       <button
         type="submit"
         disabled={processing || isLoading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 rounded-lg transition"
+        className="w-full bg-primary disabled:bg-gray-400 text-white font-medium py-3 rounded-lg transition"
       >
         {processing ? 'Processing payment...' : `Pay ${formatPrice(total)}`}
       </button>

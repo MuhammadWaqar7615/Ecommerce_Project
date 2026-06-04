@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardLayout from '../../components/common/DashboardLayout';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { useCart } from '../../context/CartContext';
 import { formatPrice } from '../../utils/formatPrice';
@@ -32,15 +31,15 @@ const Cart = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Shopping Cart" subtitle="Review your items">
+      <div className="bg-white min-h-[60vh] flex items-center justify-center">
         <AnimatedLoader size="lg" label="Loading cart..." />
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (!cart?.items || cart.items.length === 0) {
     return (
-      <DashboardLayout title="Shopping Cart" subtitle="Your cart is empty">
+      <div className="bg-white min-h-[60vh]">
         <div className="text-center py-16">
           <h2 className="text-2xl font-bold mb-4">Your Cart is Empty</h2>
           <p className="text-gray-600 mb-8">Browse our products and add some items to your cart!</p>
@@ -48,12 +47,12 @@ const Cart = () => {
             Continue Shopping
           </Link>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout title="Shopping Cart" subtitle="Review and manage your items">
+    <div className="bg-white min-h-[60vh]">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Cart Items */}
         <div className="lg:w-2/3">
@@ -149,7 +148,7 @@ const Cart = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

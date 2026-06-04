@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import Header from '../../components/common/Header';
-import Footer from '../../components/common/Footer';
 import ProductCard from '../../components/common/ProductCard';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { getPublicProducts, getCategories } from '../../services/product';
@@ -86,14 +84,12 @@ const ProductListing = () => {
   };
 
   return (
-    <>
-      <Header variant="public" showSearch showCart />
-      <main className="container mx-auto px-4 py-8 mt-10">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-4 md:mb-6 mt-2"
-        >
+    <main className="container mx-auto px-4 py-8 mt-10">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="mb-4 md:mb-6 mt-2"
+      >
           <button
             onClick={() => Navigate(-1)}
             className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all group text-sm md:text-base"
@@ -188,8 +184,6 @@ const ProductListing = () => {
           </div>
         </div>
       </main>
-      <Footer />
-    </>
   );
 };
 

@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
 import AnimatedLoader from './components/common/AnimatedLoader';
-import Footer from './components/common/Footer';
+import MainLayout from './components/common/layout/MainLayout';
 import InputDefaults from './components/common/InputDefaults';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -99,8 +99,8 @@ function AppContent() {
   return (
     <>
       <InputDefaults />
-      <main className="min-h-screen">
-        <Routes>
+      <Routes>
+        <Route element={<MainLayout />}>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<ProductListing />} />
@@ -128,6 +128,8 @@ function AppContent() {
               <PaymentSuccess />
             </ProtectedRoute>
           } />
+        </Route>
+
           <Route path="/customer/dashboard" element={
             <ProtectedRoute allowedRoles={['customer']}>
               <CustomerDashboard />
@@ -163,7 +165,6 @@ function AppContent() {
             </ProtectedRoute>
           } />
         </Routes>
-      </main>
     </>
   );
 }

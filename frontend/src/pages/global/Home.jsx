@@ -1,7 +1,5 @@
 // src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
-import Header from '../../components/common/Header';
-import Footer from '../../components/common/Footer';
 import HeroSlider from '../../components/global/home/HeroSlider'
 import FeaturedProductsSection from '../../components/global/home/FeaturedProductsSection';
 import AboutSection from '../../components/global/home/AboutSection';
@@ -31,20 +29,16 @@ const Home = () => {
   }, []);
 
   return (
-    <>
-      <Header variant="public" showSearch showCart />
-      <main>
-        <HeroSlider />
-        <FeaturedProductsSection products={featuredProducts} loading={loading} />
-        <AboutSection />
-        <HowItWorksSection />
-        <WhyChooseSection />
-        <PlatformRolesSection />
-        <CallToActionSection />
-        <CategoriesSection />
-      </main>
-      <Footer />
-    </>
+    <main>
+      <HeroSlider />
+      <FeaturedProductsSection products={featuredProducts} loading={loading} />
+      <AboutSection />
+      <HowItWorksSection />
+      <WhyChooseSection />
+      <PlatformRolesSection />
+      <CallToActionSection />
+      <CategoriesSection />
+    </main>
   );
 };
 

@@ -5,8 +5,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
-import Header from '../../components/common/Header';
-import Footer from '../../components/common/Footer';
 import AlertConfirmation from '../../components/common/AlertConfirmation';
 import { getProductById } from '../../services/product';
 import { formatPrice } from '../../utils/formatPrice';
@@ -195,34 +193,26 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <>
-        <Header variant="public" showSearch showCart />
-        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
-          <AnimatedLoader size="lg" label="Loading product..." />
-        </div>
-        <Footer />
-      </>
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
+        <AnimatedLoader size="lg" label="Loading product..." />
+      </div>
     );
   }
 
   if (!product) {
     return (
-      <>
-        <Header variant="public" showSearch showCart />
-        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
-          <div className="max-w-md mx-auto text-center">
-            <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <ShoppingBag size={32} className="text-gray-400" />
-            </div>
-            <h2 className="text-2xl font-light text-gray-800 mb-2">Not Found</h2>
-            <p className="text-gray-500 mb-6">The product you're looking for doesn't exist.</p>
-            <Link to="/products" className="inline-block px-6 py-2 bg-primary text-white rounded-lg">
-              Browse Collection
-            </Link>
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
+        <div className="max-w-md mx-auto text-center">
+          <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <ShoppingBag size={32} className="text-gray-400" />
           </div>
+          <h2 className="text-2xl font-light text-gray-800 mb-2">Not Found</h2>
+          <p className="text-gray-500 mb-6">The product you're looking for doesn't exist.</p>
+          <Link to="/products" className="inline-block px-6 py-2 bg-primary text-white rounded-lg">
+            Browse Collection
+          </Link>
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
@@ -241,7 +231,6 @@ const ProductDetail = () => {
 
   return (
     <>
-      <Header variant="public" showSearch showCart />
       <main className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           {/* Back Button */}
@@ -454,7 +443,6 @@ const ProductDetail = () => {
           </div>
         </div>
       </main>
-      <Footer />
 
       {/* Gallery Modal */}
       <AnimatePresence>

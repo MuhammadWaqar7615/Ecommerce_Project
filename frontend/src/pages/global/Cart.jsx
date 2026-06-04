@@ -52,7 +52,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="bg-white min-h-[60vh]">
+    <div className="container mx-auto px-4 py-8 mt-10">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Cart Items */}
         <div className="lg:w-2/3">

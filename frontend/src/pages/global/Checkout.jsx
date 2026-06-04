@@ -538,7 +538,7 @@ const Checkout = () => {
                 </div>
 
                 {step === 'payment' && (
-                  <div className="mt-6 p-3 bg-blue-50/50 border border-blue-100 rounded-lg text-sm text-blue-700 flex items-center gap-2">
+                  <div className="mt-6 p-3 bg-secondary/30 border border-primary/50 rounded-lg text-sm text-primary flex items-center gap-2">
                     <CreditCard size={16} className="flex-shrink-0" />
                     <span>Payment is secured by Stripe</span>
                   </div>

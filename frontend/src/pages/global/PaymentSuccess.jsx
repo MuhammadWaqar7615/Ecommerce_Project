@@ -68,7 +68,7 @@ const PaymentSuccess = () => {
 
             <button
               onClick={handleViewOrder}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition mb-3"
+              className="w-full bg-primary/95 hover:bg-primary text-white font-medium py-3 rounded-lg transition mb-3"
             >
               View Order Details
             </button>

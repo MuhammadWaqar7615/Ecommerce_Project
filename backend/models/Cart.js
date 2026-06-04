@@ -19,6 +19,11 @@ const cartSchema = new mongoose.Schema({
       min: 1,
     },
     priceAtAdd: Number,
+    shopId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Shop',
+      required: true,  // Ensures every cart item knows which shop it belongs to
+    },
   }],
 }, {
   timestamps: true,

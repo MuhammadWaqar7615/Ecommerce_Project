@@ -45,12 +45,12 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addItem = async (productId, quantity) => {
+  const addItem = async (productId, quantity, shopId) => {
     if (user?.role !== 'customer') {
       throw new Error('Only customers can add items to cart');
     }
     try {
-      const data = await addToCart(productId, quantity);
+      const data = await addToCart(productId, quantity, shopId);
       setCart(data.cart);
       const count = data.cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
       setItemCount(count);

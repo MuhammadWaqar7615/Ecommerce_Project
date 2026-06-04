@@ -109,11 +109,34 @@ const getCart = async (req, res) => {
 // Add to cart
 const addToCart = async (req, res) => {
   try {
-    const { productId, quantity = 1 } = req.body;
+    let { productId, quantity = 1, shopId } = req.body;
 
-    const product = await Product.findById(productId);
+    // Fetch product and populate shopId (in case it's a reference)
+    const product = await Product.findById(productId).populate('shopId');
     if (!product || !product.isVisible) {
       return errorResponse(res, 'Product not available', 404);
+    }
+
+    // If shopId was not sent by frontend, derive it from the product
+    if (!shopId) {
+      if (product.shopId) {
+        // product.shopId could be an ObjectId or a populated document
+        shopId = product.shopId._id ? product.shopId._id.toString() : product.shopId.toString();
+      } else {
+        return errorResponse(res, 'Product has no associated shop', 400);
+      }
+    } else {
+      shopId = shopId.toString();
+    }
+
+    if (!shopId) {
+      return errorResponse(res, 'Shop ID is required', 400);
+    }
+
+    // Verify the shopId matches the product's shop (optional but recommended)
+    const productShopId = product.shopId._id ? product.shopId._id.toString() : product.shopId.toString();
+    if (productShopId !== shopId) {
+      return errorResponse(res, 'Shop ID does not match product', 400);
     }
 
     if (product.stock < quantity) {
@@ -136,12 +159,14 @@ const addToCart = async (req, res) => {
         productId,
         quantity,
         priceAtAdd: product.price,
+        shopId: shopId, // now guaranteed to be a valid ObjectId string
       });
     }
 
     await cart.save();
     successResponse(res, { cart }, 'Item added to cart');
   } catch (error) {
+    console.error('Add to cart error:', error);
     errorResponse(res, error.message);
   }
 };

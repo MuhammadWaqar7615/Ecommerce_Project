@@ -54,6 +54,15 @@ const ProductDetail = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
   };
 
+  // Helper to extract shop ID from product (handles populated object or plain ID)
+  const getProductShopId = (product) => {
+    if (!product) return null;
+    if (product.shopId && typeof product.shopId === 'object' && product.shopId._id) {
+      return product.shopId._id;
+    }
+    return product.shopId;
+  };
+
   useEffect(() => {
     fetchProduct();
   }, [id]);
@@ -89,7 +98,8 @@ const ProductDetail = () => {
     setShowAddToCartAlert(false);
     setAddingToCart(true);
     try {
-      await addItem(id, quantity);
+      const shopId = getProductShopId(product);
+      await addItem(id, quantity, shopId);
       toast.success(`${quantity} × ${product.name} added to cart!`);
     } catch (error) {
       toast.error(error.message);
@@ -115,7 +125,8 @@ const ProductDetail = () => {
     setShowBuyNowAlert(false);
     setBuyingNow(true);
     try {
-      await addItem(id, quantity);
+      const shopId = getProductShopId(product);
+      await addItem(id, quantity, shopId);
       navigate('/checkout');
     } catch (error) {
       toast.error(error.message);

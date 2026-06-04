@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
@@ -12,7 +12,7 @@ import { getSettings } from '../../services/admin';
 import useDebounce from '../../hooks/useDebounce';
 
 const Checkout = () => {
-  const { cart, loadCart, loading: cartLoading } = useCart();
+  const { cart, loading: cartLoading } = useCart();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
@@ -25,40 +25,58 @@ const Checkout = () => {
   });
 
   const [shopsLocation, setShopsLocation] = useState([]);
- const shopIds = useMemo(
-  () => cart?.items?.map(item => item.productId?.shopId).filter(Boolean) || [],
-  [cart?.items]
-);
   const [adminSettings, setAdminSettings] = useState(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const [shippingDistance, setShippingDistance] = useState(0);
+  const [dataReady, setDataReady] = useState(false);
+  const lastCalculatedRef = useRef('');
 
-  // Fetch shop locations whenever cart is loaded and shopIds are available
-useEffect(() => {
-  const fetchLocations = async () => {
-    // Also guard against cart.items being undefined/empty
-    console.log('Cart loading:', cartLoading, 'Cart items:', cart?.items); // Debugging line
-    if (cartLoading || !cart?.items || cart.items.length === 0) return;
-
-    const ids = cart.items.map(item => item.productId?.shopId).filter(Boolean);
-    if (ids.length === 0) {
-      setShopsLocation([]);
-      return;
+  // Helper to extract shop ID from a cart item
+  const getShopIdFromItem = (item) => {
+    if (item.productId?.shopId) return item.productId.shopId;
+    if (item.shopId) return item.shopId;
+    if (item.vendorId) return item.vendorId;
+    if (item.productId && typeof item.productId === 'string') {
+      // productId might be just an ID; we can't get shopId from it directly.
+      // In that case, you'd need to fetch product details. But for now, log.
+      console.warn('productId is a string, cannot extract shopId', item.productId);
+      return null;
     }
-
-    const uniqueShopIds = [...new Set(ids)];
-    const locations = await Promise.all(uniqueShopIds.map(id => getShopLocationById(id)));
-    setShopsLocation(locations.filter(loc => loc !== null));
+    console.warn('No shopId found in cart item', item);
+    return null;
   };
 
-  fetchLocations();
-}, [cartLoading, cart?.items, shippingAddress.city]); // depend on cart.items directly, not derived shopIds// Dependencies ensure fetch runs when cart loads or cart items change
+  // Fetch shop locations only when cart changes
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (cartLoading || !cart?.items || cart.items.length === 0) return;
+
+      // Debug: log the first cart item structure
+      if (cart.items[0]) {
+        console.log('Cart item keys:', Object.keys(cart.items[0]));
+        console.log('Full first item:', cart.items[0]);
+      }
+
+      const ids = cart.items.map(item => getShopIdFromItem(item)).filter(Boolean);
+      console.log('Extracted shop IDs:', ids);
+      if (ids.length === 0) {
+        console.error('No valid shop IDs found in cart. Cannot calculate delivery distance.');
+        setShopsLocation([]);
+        return;
+      }
+
+      const uniqueShopIds = [...new Set(ids)];
+      const locations = await Promise.all(uniqueShopIds.map(id => getShopLocationById(id)));
+      console.log('Fetched shop locations:', locations);
+      setShopsLocation(locations.filter(loc => loc !== null));
+    };
+    fetchLocations();
+  }, [cartLoading, cart?.items]);
 
   const [citySearchTerm, setCitySearchTerm] = useState('');
   const debouncedCitySearchTerm = useDebounce(citySearchTerm, 500);
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-
-  const [shippingDistance, setShippingDistance] = useState(0);
   const [step, setStep] = useState('shipping');
   const [orderId, setOrderId] = useState(null);
   const [stripePublicKey, setStripePublicKey] = useState(null);
@@ -73,7 +91,6 @@ useEffect(() => {
   const shippingBaseFee = adminSettings?.shipping_base_fee || 0;
   const shippingPerKmRate = adminSettings?.shipping_per_km_rate || 0;
   const maxDistanceForDelivery = adminSettings?.max_distance_for_delivery || 0;
-
   const shippingFee = shippingBaseFee + Math.ceil(shippingDistance) * shippingPerKmRate;
   const total = subtotal + shippingFee;
 
@@ -94,6 +111,12 @@ useEffect(() => {
     fetchSettings();
   }, []);
 
+  // Set dataReady flag when both shopsLocation and adminSettings are loaded
+  useEffect(() => {
+    const ready = shopsLocation.length > 0 && adminSettings !== null;
+    setDataReady(ready);
+  }, [shopsLocation, adminSettings]);
+
   // Fetch city suggestions
   useEffect(() => {
     const fetchCitySuggestions = async () => {
@@ -113,35 +136,49 @@ useEffect(() => {
     fetchCitySuggestions();
   }, [debouncedCitySearchTerm]);
 
-  // Calculate distance when address/city changes and shops are loaded
+  // Distance calculation effect – runs when city or dataReady changes
   useEffect(() => {
-    const updateDistance = async () => {
-      // Wait until we have shop locations and admin settings
-      if (shopsLocation.length === 0 || !adminSettings) return;
-
-      const targetLat = shippingAddress.latitude || shippingAddress.cityLat;
-      const targetLng = shippingAddress.longitude || shippingAddress.cityLng;
-
-      if (targetLat && targetLng) {
-        try {
-          const shopLoc = [shopsLocation[0].location.longitude, shopsLocation[0].location.latitude];
-          const distData = await calculateDistance([targetLng, targetLat], shopLoc);
-          const limitedDistance = Math.min(distData.distance, maxDistanceForDelivery);
-          setShippingDistance(limitedDistance);
-        } catch (error) {
-          console.error('Error calculating distance:', error);
-          setShippingDistance(0);
-        }
-      } else {
+    const calculateDistanceNow = async () => {
+      const targetLat = shippingAddress.latitude ?? shippingAddress.cityLat;
+      const targetLng = shippingAddress.longitude ?? shippingAddress.cityLng;
+      
+      if (!targetLat || !targetLng) {
+        setShippingDistance(0);
+        return;
+      }
+      
+      if (!dataReady) {
+        return;
+      }
+      
+      const firstShop = shopsLocation[0];
+      if (!firstShop?.location) {
+        setShippingDistance(0);
+        return;
+      }
+      
+      const calcKey = `${targetLat},${targetLng}|${firstShop.location.latitude},${firstShop.location.longitude}`;
+      if (lastCalculatedRef.current === calcKey) return;
+      
+      try {
+        const shopLoc = [firstShop.location.longitude, firstShop.location.latitude];
+        const distData = await calculateDistance([targetLng, targetLat], shopLoc);
+        const limitedDistance = Math.min(distData.distance, maxDistanceForDelivery);
+        setShippingDistance(limitedDistance);
+        lastCalculatedRef.current = calcKey;
+      } catch (error) {
+        console.error('Error calculating distance:', error);
         setShippingDistance(0);
       }
     };
-    updateDistance();
+    
+    calculateDistanceNow();
   }, [
-    shippingAddress.latitude,
-    shippingAddress.longitude,
     shippingAddress.cityLat,
     shippingAddress.cityLng,
+    shippingAddress.latitude,
+    shippingAddress.longitude,
+    dataReady,
     shopsLocation,
     adminSettings,
     maxDistanceForDelivery
@@ -164,17 +201,13 @@ useEffect(() => {
 
   const handleSubmitShipping = async (e) => {
     e.preventDefault();
-    
-    const finalLat = shippingAddress.latitude || shippingAddress.cityLat;
-    const finalLng = shippingAddress.longitude || shippingAddress.cityLng;
-
+    const finalLat = shippingAddress.latitude ?? shippingAddress.cityLat;
+    const finalLng = shippingAddress.longitude ?? shippingAddress.cityLng;
     if (!finalLat || !finalLng) {
       alert('Please select a valid city from the suggestions');
       return;
     }
-    
     setSubmitting(true);
-
     try {
       const orderData = {
         shippingAddress: {
@@ -250,6 +283,21 @@ useEffect(() => {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <AnimatedLoader size="lg" label="Loading cart and settings..." />
+      </div>
+    );
+  }
+
+  // Check if shop locations are missing
+  if (!cartLoading && shopsLocation.length === 0 && cart?.items?.length > 0) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h2 className="text-red-800 font-semibold mb-2">Unable to calculate delivery</h2>
+          <p className="text-red-600">Shop information is missing. Please contact support.</p>
+          <button onClick={() => navigate('/cart')} className="mt-4 btn-primary">
+            Back to Cart
+          </button>
+        </div>
       </div>
     );
   }

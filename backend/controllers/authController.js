@@ -26,7 +26,7 @@ const register = async (req, res) => {
       const emailConflict = userExists.email === email.toLowerCase();
       const usernameConflict = username && userExists.username === username;
       const message = emailConflict
-        ? 'An account with that email already exists. Please log in or use a different email.'
+        ? 'An account with that email or username already exists. Please log in or use a different email.'
         : usernameConflict
         ? 'That username is already taken. Please choose another username.'
         : 'An account with those details already exists.';

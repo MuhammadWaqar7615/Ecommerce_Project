@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { verifyEmail, sendVerificationLink } from '../../services/auth';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,7 @@ const EmailVerification = () => {
   const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setErrorState] = useState('');
+  const verificationAttempted = useRef(false); // prevent double attempts
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -28,16 +29,22 @@ const EmailVerification = () => {
       );
     }
 
-    if (urlToken) {
+    if (urlToken && !verificationAttempted.current) {
+      verificationAttempted.current = true;
       setToken(urlToken);
-      verifyEmailToken(urlToken);
+      
+      // Small delay to let backend finalize token generation
+      setTimeout(() => {
+        verifyEmailToken(urlToken, 1); // pass retry count
+      }, 500);
     }
   }, [searchParams]);
 
-  const verifyEmailToken = async (verificationToken) => {
+  const verifyEmailToken = async (verificationToken, retryCount = 1) => {
     setVerifying(true);
     setErrorState('');
     setMessage('');
+    
     try {
       const response = await verifyEmail(verificationToken);
       setMessage('Email verified successfully! Logging you in...');
@@ -54,10 +61,22 @@ const EmailVerification = () => {
         }, 1500);
       }
     } catch (err) {
-      setErrorState(err.message || 'Verification failed. Please try again.');
-      setMessage('');
+      const errorMsg = err.message || 'Verification failed. Please try again.';
+      
+      // If this is the first attempt and error suggests temporary issue, retry once
+      if (retryCount > 0 && (errorMsg.includes('timeout') || errorMsg.includes('expired') || errorMsg.includes('not found'))) {
+        console.log('Verification failed, retrying in 1 second...');
+        setTimeout(() => {
+          verifyEmailToken(verificationToken, retryCount - 1);
+        }, 1000);
+      } else {
+        setErrorState(errorMsg);
+        setMessage('');
+        // Reset attempt flag so user can manually retry if needed
+        verificationAttempted.current = false;
+      }
     } finally {
-      setVerifying(false);
+      if (retryCount === 0 || !error) setVerifying(false);
     }
   };
 
@@ -98,28 +117,76 @@ const EmailVerification = () => {
               <p className="mt-2 text-center text-sm text-gray-600">Please verify your email to complete registration</p>
             </div>
 
-            {verifying && (<div className="rounded-md bg-blue-50 p-4"><div className="flex"><div className="ml-3"><p className="text-sm font-medium text-blue-800">Verifying your email...</p></div></div></div>)}
-            {message && (<div className="rounded-md bg-green-50 p-4"><div className="flex"><div className="ml-3"><p className="text-sm font-medium text-green-800">{message}</p></div></div></div>)}
-            {error && (<div className="rounded-md bg-red-50 p-4"><div className="flex"><div className="ml-3"><p className="text-sm font-medium text-red-800">{error}</p></div></div></div>)}
+            {verifying && (
+              <div className="rounded-md bg-blue-50 p-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-blue-800">Verifying your email...</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {message && (
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800">{message}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-800">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {!verifying && !token && (
               <form className="mt-6 space-y-4" onSubmit={handleResendEmail}>
                 <div>
                   <label htmlFor="email" className="sr-only">Email address</label>
-                  <input id="email" name="email" type="email" autoComplete="email" required className="input-field" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="input-field"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                  />
                 </div>
 
                 <div>
-                  <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Sending...' : 'Resend Verification Email'}</button>
+                  <button type="submit" disabled={loading} className="btn-primary w-full">
+                    {loading ? 'Sending...' : 'Resend Verification Email'}
+                  </button>
                 </div>
 
                 <div className="text-center text-sm text-gray-600">
-                  <p>Already verified? <button type="button" onClick={() => navigate('/login')} className="text-primary hover:underline font-medium">Log in here</button></p>
+                  <p>
+                    Already verified?{' '}
+                    <button type="button" onClick={() => navigate('/login')} className="text-primary hover:underline font-medium">
+                      Log in here
+                    </button>
+                  </p>
                 </div>
               </form>
             )}
 
-            {message && token && (<div className="text-center text-sm text-gray-600"><button onClick={() => navigate('/login')} className="text-primary hover:underline font-medium">Go to Login</button></div>)}
+            {message && token && (
+              <div className="text-center text-sm text-gray-600">
+                <button onClick={() => navigate('/login')} className="text-primary hover:underline font-medium">
+                  Go to Login
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,14 +1,14 @@
-// src/pages/Checkout.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import { useCart } from '../../context/CartContext';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
 import { createOrder, getOrderById } from '../../services/order';
 import { getStripePublicKey } from '../../services/payment';
+import { getProductById } from '../../services/product'; // New import for product details
 import StripePaymentForm from '../../components/common/StripePaymentForm';
 import { formatPrice } from '../../utils/formatPrice';
-import { getShopLocationById } from '../../services/vendor';
+import { getShopLocationById, getShop } from '../../services/vendor'; // Added getShop for direct checkout shop info
 import { getLocationSuggestions, calculateDistance } from '../../utils/locationApi';
 import { getSettings } from '../../services/admin';
 import useDebounce from '../../hooks/useDebounce';
@@ -93,9 +93,32 @@ const buildOrderSummaryFromCart = (cart, shippingFee, shippingDistance) => {
   };
 };
 
+// New function to build order summary from a single product
+const buildOrderSummaryFromDirectProduct = (product, quantity, shippingFee, shippingDistance) => {
+  const price = product.price || 0;
+  const item = {
+    id: product._id,
+    name: product.name,
+    quantity,
+    price,
+    lineTotal: price * quantity,
+  };
+  const subtotal = item.lineTotal;
+
+  return {
+    items: [item],
+    subtotal,
+    shippingFee,
+    shippingDistance,
+    total: subtotal + shippingFee,
+  };
+};
+
+
 const Checkout = () => {
   const { cart, loading: cartLoading } = useCart();
   const navigate = useNavigate();
+  const location = useLocation(); // Initialize useLocation
   const [submitting, setSubmitting] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     city: '',
@@ -115,33 +138,89 @@ const Checkout = () => {
   const [restoringCheckout, setRestoringCheckout] = useState(true);
   const [restoredOrderSummary, setRestoredOrderSummary] = useState(null);
 
+  // Parse URL parameters for direct checkout
+  const queryParams = new URLSearchParams(location.search);
+  const urlProductId = queryParams.get('productId');
+  const urlShopId = queryParams.get('shopId');
+  const urlQuantity = parseInt(queryParams.get('quantity'), 10);
+  const isDirectCheckout = !!(urlProductId && urlShopId && urlQuantity > 0);
+
+  // New states for direct product checkout
+  const [directProductCheckout, setDirectProductCheckout] = useState(null);
+  const [loadingDirectProduct, setLoadingDirectProduct] = useState(false);
+  const [directCheckoutError, setDirectCheckoutError] = useState(null);
+
   const getShopIdFromItem = (item) => {
     if (item.productId?.shopId) return item.productId.shopId;
     if (item.shopId) return item.shopId;
     if (item.vendorId) return item.vendorId;
     if (item.productId && typeof item.productId === 'string') {
-      console.warn('productId is a string, cannot extract shopId', item.productId);
       return null;
     }
-    console.warn('No shopId found in cart item', item);
     return null;
   };
 
+  // Effect to fetch product/shop details for direct checkout
+  useEffect(() => {
+    if (isDirectCheckout) {
+      setLoadingDirectProduct(true);
+      setDirectCheckoutError(null);
+      const fetchDirectProductData = async () => {
+        try {
+          const [productResponse, shopLocResponse] = await Promise.all([
+            getProductById(urlProductId),
+            getShopLocationById(urlShopId)
+          ]);
+
+          if (productResponse?.product && shopLocResponse) {
+            setDirectProductCheckout({
+              product: productResponse.product,
+              shop: { ...shopLocResponse, _id: urlShopId },
+              quantity: urlQuantity,
+            });
+          } else {
+            setDirectCheckoutError('Product or shop not found.');
+          }
+        } catch (error) {
+          console.error('Error fetching direct checkout data:', error);
+          setDirectCheckoutError('Failed to load product details.');
+        } finally {
+          setLoadingDirectProduct(false);
+        }
+      };
+      fetchDirectProductData();
+    } else {
+      setDirectProductCheckout(null);
+    }
+  }, [isDirectCheckout, urlProductId, urlShopId, urlQuantity]);
+
   useEffect(() => {
     const fetchLocations = async () => {
-      if (cartLoading || !cart?.items || cart.items.length === 0) return;
-      const ids = cart.items.map(item => getShopIdFromItem(item)).filter(Boolean);
-      if (ids.length === 0) {
-        console.error('No valid shop IDs found in cart. Cannot calculate delivery distance.');
+      let idsToFetch = [];
+
+      if (directProductCheckout?.shop?._id) {
+        idsToFetch = [directProductCheckout.shop._id];
+      } else if (!cartLoading && cart?.items && cart.items.length > 0) {
+        idsToFetch = cart.items.map(item => getShopIdFromItem(item)).filter(Boolean);
+      }
+
+      const uniqueShopIds = [...new Set(idsToFetch)].filter(id => id && id !== 'undefined');
+
+      if (uniqueShopIds.length === 0) {
         setShopsLocation([]);
         return;
       }
-      const uniqueShopIds = [...new Set(ids)];
-      const locations = await Promise.all(uniqueShopIds.map(id => getShopLocationById(id)));
-      setShopsLocation(locations.filter(loc => loc !== null));
+
+      try {
+        const locations = await Promise.all(uniqueShopIds.map(id => getShopLocationById(id)));
+        setShopsLocation(locations.filter(loc => loc !== null));
+      } catch (error) {
+        console.error('Error fetching shop locations:', error);
+      }
     };
     fetchLocations();
-  }, [cartLoading, cart?.items]);
+  }, [cartLoading, cart?.items, directProductCheckout]);
+
 
   const [citySearchTerm, setCitySearchTerm] = useState('');
   const debouncedCitySearchTerm = useDebounce(citySearchTerm, 500);
@@ -156,9 +235,26 @@ const Checkout = () => {
   const shippingPerKmRate = adminSettings?.shipping_per_km_rate || 0;
   const maxDistanceForDelivery = adminSettings?.max_distance_for_delivery || 0;
   const shippingFee = shippingBaseFee + Math.ceil(shippingDistance) * shippingPerKmRate;
-  const cartOrderSummary = buildOrderSummaryFromCart(cart, shippingFee, shippingDistance);
-  const orderSummary = restoredOrderSummary || cartOrderSummary;
-  const dataReady = shopsLocation.length > 0 && adminSettings !== null;
+
+  // Determine which order summary to use
+  let currentOrderSummary = null;
+  if (directProductCheckout) {
+    currentOrderSummary = buildOrderSummaryFromDirectProduct(
+      directProductCheckout.product,
+      directProductCheckout.quantity,
+      shippingFee,
+      shippingDistance
+    );
+  } else if (cart?.items?.length > 0) {
+    currentOrderSummary = buildOrderSummaryFromCart(cart, shippingFee, shippingDistance);
+  } else {
+    currentOrderSummary = { items: [], subtotal: 0, shippingFee: 0, shippingDistance: 0, total: 0 };
+  }
+
+  const orderSummary = restoredOrderSummary || currentOrderSummary;
+
+  // Data readiness check
+  const dataReady = shopsLocation.length > 0 && adminSettings !== null && (directProductCheckout || (cart?.items?.length > 0 && !cartLoading));
   const subtotal = orderSummary.subtotal;
   const displayShippingFee = orderSummary.shippingFee;
   const displayShippingDistance = orderSummary.shippingDistance;
@@ -260,7 +356,8 @@ const Checkout = () => {
         setShippingDistance(0);
         return;
       }
-      if (!dataReady) return;
+      if (!dataReady) return; // Wait for all data to be ready
+
       const firstShop = shopsLocation[0];
       if (!firstShop?.location) {
         setShippingDistance(0);
@@ -338,7 +435,23 @@ const Checkout = () => {
     }
     setSubmitting(true);
     try {
+      // Determine items to be sent based on direct product checkout or cart
+      const itemsForOrder = directProductCheckout
+        ? [{
+            productId: directProductCheckout.product._id,
+            quantity: directProductCheckout.quantity,
+            price: directProductCheckout.product.price,
+            shopId: directProductCheckout.shop._id,
+          }]
+        : (cart?.items || []).map(item => ({
+            productId: item.productId._id || item.productId, // Ensure productId is just the ID
+            quantity: item.quantity,
+            price: item.priceAtAdd || item.productId.price,
+            shopId: getShopIdFromItem(item),
+          }));
+
       const orderData = {
+        items: itemsForOrder, // Pass the determined items
         shippingAddress: {
           address: shippingAddress.address,
           city: shippingAddress.city,
@@ -359,7 +472,7 @@ const Checkout = () => {
         shippingFee: createdOrder.shippingFee || shippingFee,
         shippingDistance,
         shippingAddress,
-        items: cartOrderSummary.items,
+        items: orderSummary.items, // Use orderSummary.items which accounts for direct/cart
       });
       setOrderId(createdOrder._id);
       setRestoredOrderSummary(null);
@@ -387,16 +500,15 @@ const Checkout = () => {
     setOrderId(null);
   };
 
+  // Modified handleBackToCart to handle direct product checkout
   const handleBackToCart = () => {
     clearPendingCheckoutSnapshot();
-    navigate('/cart');
-  };
-
-  useEffect(() => {
-    if (!restoringCheckout && step !== 'payment' && !cartLoading && cart && cart.items && cart.items.length === 0) {
+    if (directProductCheckout) {
+      navigate('/'); // If direct product checkout, go to home or product detail page
+    } else {
       navigate('/cart');
     }
-  }, [cart, cartLoading, navigate, restoringCheckout, step]);
+  };
 
   const handleCityChange = (e) => {
     const city = e.target.value;
@@ -440,7 +552,17 @@ const Checkout = () => {
     exit: { opacity: 0, x: 20, transition: { duration: 0.3 } }
   };
 
-  if (cartLoading || loadingSettings || restoringCheckout) {
+  // Redirect if no content and not loading
+  useEffect(() => {
+    if (!loadingDirectProduct && !cartLoading && !restoringCheckout && step !== 'payment') {
+      if (!isDirectCheckout && (!cart?.items || cart.items.length === 0)) {
+        navigate('/cart');
+      }
+    }
+  }, [loadingDirectProduct, cartLoading, restoringCheckout, isDirectCheckout, cart?.items, step, navigate]);
+
+  // Combined loading state to include direct product loading
+  if (cartLoading || loadingSettings || restoringCheckout || loadingDirectProduct) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
         <AnimatedLoader size="lg" label="Loading checkout..." />
@@ -448,7 +570,29 @@ const Checkout = () => {
     );
   }
 
-  if (!cartLoading && shopsLocation.length === 0 && cart?.items?.length > 0) {
+  // Handle direct checkout error
+  if (directCheckoutError && !restoringCheckout) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center">
+          <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
+          <h2 className="text-lg font-medium text-gray-800 mb-2">Checkout Error</h2>
+          <p className="text-gray-500 mb-6">{directCheckoutError}</p>
+          <button onClick={() => navigate('/')} className="btn-primary w-full">
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Return null if no content (handled by redirect useEffect)
+  if (!directProductCheckout && (!cart?.items || cart.items.length === 0) && step !== 'payment') {
+    return null;
+  }
+
+  // Handle cases where shopsLocation is empty for an active checkout flow
+  if (shopsLocation.length === 0 && (cart?.items?.length > 0 || directProductCheckout)) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center">
@@ -456,15 +600,11 @@ const Checkout = () => {
           <h2 className="text-lg font-medium text-gray-800 mb-2">Unable to calculate delivery</h2>
           <p className="text-gray-500 mb-6">Shop information is missing. Please contact support.</p>
           <button onClick={handleBackToCart} className="btn-primary w-full">
-            Back to Cart
+            {directProductCheckout ? 'Go to Home' : 'Back to Cart'}
           </button>
         </div>
       </div>
     );
-  }
-
-  if ((!cart?.items || cart.items.length === 0) && step !== 'payment') {
-    return null;
   }
 
   return (
@@ -477,7 +617,7 @@ const Checkout = () => {
             className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors group"
           >
             <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-sm">Back to Cart</span>
+            <span className="text-sm">{directProductCheckout ? 'Go to Home' : 'Back to Cart'}</span>
           </button>
         </div>
 

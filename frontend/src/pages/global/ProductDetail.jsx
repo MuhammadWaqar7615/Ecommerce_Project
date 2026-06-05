@@ -124,8 +124,8 @@ const ProductDetail = () => {
     setBuyingNow(true);
     try {
       const shopId = getProductShopId(product);
-      await addItem(id, quantity, shopId);
-      navigate('/checkout');
+      // await addItem(id, quantity, shopId);
+      navigate(`/checkout?productId=${id}&quantity=${quantity}&shopId=${shopId}`);
     } catch (error) {
       toast.error(error.message);
       setBuyingNow(false);

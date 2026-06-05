@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import AnimatedLoader from '../../components/common/AnimatedLoader';
-import { createOrder } from '../../services/order';
+import { createOrder, getOrderById } from '../../services/order';
 import { getStripePublicKey } from '../../services/payment';
 import StripePaymentForm from '../../components/common/StripePaymentForm';
 import { formatPrice } from '../../utils/formatPrice';
@@ -13,6 +13,85 @@ import { getLocationSuggestions, calculateDistance } from '../../utils/locationA
 import { getSettings } from '../../services/admin';
 import useDebounce from '../../hooks/useDebounce';
 import { Truck, MapPin, CreditCard, ShoppingBag, ChevronLeft, AlertCircle } from 'lucide-react';
+
+const MotionDiv = motion.div;
+const MotionButton = motion.button;
+const PENDING_CHECKOUT_KEY = 'pendingCheckoutPayment';
+const PENDING_CHECKOUT_MAX_AGE = 24 * 60 * 60 * 1000;
+
+const clearPendingCheckoutSnapshot = () => {
+  sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
+};
+
+const readPendingCheckoutSnapshot = () => {
+  try {
+    const rawSnapshot = sessionStorage.getItem(PENDING_CHECKOUT_KEY);
+    if (!rawSnapshot) return null;
+
+    const snapshot = JSON.parse(rawSnapshot);
+    const isExpired = !snapshot.createdAt || Date.now() - snapshot.createdAt > PENDING_CHECKOUT_MAX_AGE;
+    if (!snapshot.orderId || isExpired) {
+      clearPendingCheckoutSnapshot();
+      return null;
+    }
+
+    return snapshot;
+  } catch (error) {
+    console.error('Error reading pending checkout snapshot:', error);
+    clearPendingCheckoutSnapshot();
+    return null;
+  }
+};
+
+const writePendingCheckoutSnapshot = (snapshot) => {
+  sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify({
+    ...snapshot,
+    createdAt: Date.now(),
+  }));
+};
+
+const buildOrderSummaryFromOrder = (order) => ({
+  items: (order.items || []).map((item) => {
+    const product = item.productId || {};
+    const price = item.price ?? product.price ?? 0;
+
+    return {
+      id: product._id || item._id || `${product.name}-${item.quantity}`,
+      name: product.name || 'Product',
+      quantity: item.quantity || 0,
+      price,
+      lineTotal: price * (item.quantity || 0),
+    };
+  }),
+  subtotal: Math.max((order.totalAmount || 0) - (order.shippingFee || 0), 0),
+  shippingFee: order.shippingFee || 0,
+  shippingDistance: order.estimatedDistance || 0,
+  total: order.totalAmount || 0,
+});
+
+const buildOrderSummaryFromCart = (cart, shippingFee, shippingDistance) => {
+  const items = (cart?.items || []).map((item) => {
+    const product = item.productId || {};
+    const price = item.priceAtAdd || product.price || 0;
+
+    return {
+      id: product._id || item._id,
+      name: product.name || 'Product',
+      quantity: item.quantity || 0,
+      price,
+      lineTotal: price * (item.quantity || 0),
+    };
+  });
+  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+
+  return {
+    items,
+    subtotal,
+    shippingFee,
+    shippingDistance,
+    total: subtotal + shippingFee,
+  };
+};
 
 const Checkout = () => {
   const { cart, loading: cartLoading } = useCart();
@@ -31,8 +110,10 @@ const Checkout = () => {
   const [adminSettings, setAdminSettings] = useState(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [shippingDistance, setShippingDistance] = useState(0);
-  const [dataReady, setDataReady] = useState(false);
   const lastCalculatedRef = useRef('');
+  const stripeKeyRequestRef = useRef(false);
+  const [restoringCheckout, setRestoringCheckout] = useState(true);
+  const [restoredOrderSummary, setRestoredOrderSummary] = useState(null);
 
   const getShopIdFromItem = (item) => {
     if (item.productId?.shopId) return item.productId.shopId;
@@ -71,17 +152,71 @@ const Checkout = () => {
   const [stripePublicKey, setStripePublicKey] = useState(null);
   const [loadingKey, setLoadingKey] = useState(false);
 
-  const calculateSubtotal = () => {
-    if (!cart?.items) return 0;
-    return cart.items.reduce((sum, item) => sum + (item.priceAtAdd * item.quantity), 0);
-  };
-
-  const subtotal = calculateSubtotal();
   const shippingBaseFee = adminSettings?.shipping_base_fee || 0;
   const shippingPerKmRate = adminSettings?.shipping_per_km_rate || 0;
   const maxDistanceForDelivery = adminSettings?.max_distance_for_delivery || 0;
   const shippingFee = shippingBaseFee + Math.ceil(shippingDistance) * shippingPerKmRate;
-  const total = subtotal + shippingFee;
+  const cartOrderSummary = buildOrderSummaryFromCart(cart, shippingFee, shippingDistance);
+  const orderSummary = restoredOrderSummary || cartOrderSummary;
+  const dataReady = shopsLocation.length > 0 && adminSettings !== null;
+  const subtotal = orderSummary.subtotal;
+  const displayShippingFee = orderSummary.shippingFee;
+  const displayShippingDistance = orderSummary.shippingDistance;
+  const total = orderSummary.total;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const restorePendingCheckout = async () => {
+      const snapshot = readPendingCheckoutSnapshot();
+      if (!snapshot) {
+        if (isMounted) setRestoringCheckout(false);
+        return;
+      }
+
+      try {
+        const data = await getOrderById(snapshot.orderId);
+        const order = data.order;
+
+        if (!order || order.paymentStatus !== 'Pending') {
+          clearPendingCheckoutSnapshot();
+          if (isMounted) {
+            setRestoredOrderSummary(null);
+            setOrderId(null);
+            setStep('shipping');
+          }
+          return;
+        }
+
+        if (isMounted) {
+          setRestoredOrderSummary(buildOrderSummaryFromOrder(order));
+          setShippingAddress((prev) => ({
+            ...prev,
+            ...snapshot.shippingAddress,
+          }));
+          setShippingDistance(order.estimatedDistance || snapshot.shippingDistance || 0);
+          setOrderId(order._id);
+          setStep('payment');
+        }
+      } catch (error) {
+        console.error('Failed to restore pending checkout:', error);
+        clearPendingCheckoutSnapshot();
+        if (isMounted) {
+          setRestoredOrderSummary(null);
+          setOrderId(null);
+          setStep('shipping');
+        }
+      } finally {
+        if (isMounted) setRestoringCheckout(false);
+      }
+    };
+
+    restorePendingCheckout();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -98,11 +233,6 @@ const Checkout = () => {
     };
     fetchSettings();
   }, []);
-
-  useEffect(() => {
-    const ready = shopsLocation.length > 0 && adminSettings !== null;
-    setDataReady(ready);
-  }, [shopsLocation, adminSettings]);
 
   useEffect(() => {
     const fetchCitySuggestions = async () => {
@@ -162,18 +292,41 @@ const Checkout = () => {
   ]);
 
   useEffect(() => {
-    if (step === 'payment' && !stripePublicKey && !loadingKey) {
-      setLoadingKey(true);
-      getStripePublicKey()
-        .then(setStripePublicKey)
-        .catch((error) => {
-          console.error('Failed to load Stripe key:', error);
-          alert('Failed to load payment form. Please try again.');
-          setStep('shipping');
-        })
-        .finally(() => setLoadingKey(false));
+    if (step !== 'payment' || stripePublicKey || stripeKeyRequestRef.current) {
+      return;
     }
-  }, [step, stripePublicKey, loadingKey]);
+
+    let isMounted = true;
+    stripeKeyRequestRef.current = true;
+
+    const fetchStripeKey = async () => {
+      await Promise.resolve();
+      if (!isMounted) return;
+
+      setLoadingKey(true);
+      try {
+        const publicKey = await getStripePublicKey();
+        if (isMounted) setStripePublicKey(publicKey);
+      } catch (error) {
+        console.error('Failed to load Stripe key:', error);
+        alert('Failed to load payment form. Please try again.');
+        clearPendingCheckoutSnapshot();
+        if (isMounted) {
+          setRestoredOrderSummary(null);
+          setStep('shipping');
+        }
+      } finally {
+        stripeKeyRequestRef.current = false;
+        if (isMounted) setLoadingKey(false);
+      }
+    };
+
+    fetchStripeKey();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [step, stripePublicKey]);
 
   const handleSubmitShipping = async (e) => {
     e.preventDefault();
@@ -195,7 +348,21 @@ const Checkout = () => {
         shippingDistance,
       };
       const order = await createOrder(orderData);
-      setOrderId(order?.order?._id);
+      const createdOrder = order?.order;
+      if (!createdOrder?._id) {
+        throw new Error('Order was created without an ID');
+      }
+
+      writePendingCheckoutSnapshot({
+        orderId: createdOrder._id,
+        total: createdOrder.totalAmount || total,
+        shippingFee: createdOrder.shippingFee || shippingFee,
+        shippingDistance,
+        shippingAddress,
+        items: cartOrderSummary.items,
+      });
+      setOrderId(createdOrder._id);
+      setRestoredOrderSummary(null);
       setStep('payment');
     } catch (error) {
       alert(error.message || 'Failed to create order');
@@ -205,6 +372,7 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = (redirectUrl) => {
+    clearPendingCheckoutSnapshot();
     window.location.href = redirectUrl;
   };
 
@@ -213,15 +381,22 @@ const Checkout = () => {
   };
 
   const handleBackToShipping = () => {
+    clearPendingCheckoutSnapshot();
+    setRestoredOrderSummary(null);
     setStep('shipping');
     setOrderId(null);
   };
 
+  const handleBackToCart = () => {
+    clearPendingCheckoutSnapshot();
+    navigate('/cart');
+  };
+
   useEffect(() => {
-    if (!cartLoading && cart && cart.items && cart.items.length === 0) {
+    if (!restoringCheckout && step !== 'payment' && !cartLoading && cart && cart.items && cart.items.length === 0) {
       navigate('/cart');
     }
-  }, [cart, cartLoading, navigate]);
+  }, [cart, cartLoading, navigate, restoringCheckout, step]);
 
   const handleCityChange = (e) => {
     const city = e.target.value;
@@ -254,15 +429,6 @@ const Checkout = () => {
     setShippingAddress((prev) => ({ ...prev, address }));
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    }
-  };
-
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
@@ -274,7 +440,7 @@ const Checkout = () => {
     exit: { opacity: 0, x: 20, transition: { duration: 0.3 } }
   };
 
-  if (cartLoading || loadingSettings) {
+  if (cartLoading || loadingSettings || restoringCheckout) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
         <AnimatedLoader size="lg" label="Loading checkout..." />
@@ -289,7 +455,7 @@ const Checkout = () => {
           <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
           <h2 className="text-lg font-medium text-gray-800 mb-2">Unable to calculate delivery</h2>
           <p className="text-gray-500 mb-6">Shop information is missing. Please contact support.</p>
-          <button onClick={() => navigate('/cart')} className="btn-primary w-full">
+          <button onClick={handleBackToCart} className="btn-primary w-full">
             Back to Cart
           </button>
         </div>
@@ -297,7 +463,7 @@ const Checkout = () => {
     );
   }
 
-  if (!cart?.items || cart.items.length === 0) {
+  if ((!cart?.items || cart.items.length === 0) && step !== 'payment') {
     return null;
   }
 
@@ -307,7 +473,7 @@ const Checkout = () => {
         {/* Back Button */}
         <div className="mb-6">
           <button
-            onClick={() => navigate('/cart')}
+            onClick={handleBackToCart}
             className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors group"
           >
             <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -326,7 +492,7 @@ const Checkout = () => {
           <div className="lg:w-2/3">
             <AnimatePresence mode="wait">
               {step === 'shipping' ? (
-                <motion.div
+                <MotionDiv
                   key="shipping"
                   variants={stepVariants}
                   initial="hidden"
@@ -418,7 +584,7 @@ const Checkout = () => {
                         Shipping fee: {formatPrice(shippingBaseFee)} base + {formatPrice(shippingPerKmRate)}/km (max {maxDistanceForDelivery}km)
                       </p>
 
-                      <motion.button
+                      <MotionButton
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
@@ -433,12 +599,12 @@ const Checkout = () => {
                         ) : (
                           'Continue to Payment'
                         )}
-                      </motion.button>
+                      </MotionButton>
                     </form>
                   </div>
-                </motion.div>
+                </MotionDiv>
               ) : (
-                <motion.div
+                <MotionDiv
                   key="payment"
                   variants={stepVariants}
                   initial="hidden"
@@ -480,14 +646,14 @@ const Checkout = () => {
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                </MotionDiv>
               )}
             </AnimatePresence>
           </div>
 
           {/* Order Summary - Right Column */}
           <div className="lg:w-1/3">
-            <motion.div
+            <MotionDiv
               variants={cardVariants}
               initial="hidden"
               animate="visible"
@@ -505,15 +671,14 @@ const Checkout = () => {
               <div className="p-6">
                 {/* Cart Items */}
                 <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
-                  {cart.items.map((item) => {
-                    const product = item.productId || {};
+                  {orderSummary.items.map((item) => {
                     return (
-                      <div key={product._id || item._id} className="flex justify-between text-sm">
+                      <div key={item.id} className="flex justify-between text-sm">
                         <span className="text-gray-600">
-                          {item.quantity}x {product.name || 'Product'}
+                          {item.quantity}x {item.name}
                         </span>
                         <span className="font-medium text-gray-800">
-                          {formatPrice(item.priceAtAdd * item.quantity)}
+                          {formatPrice(item.lineTotal)}
                         </span>
                       </div>
                     );
@@ -526,8 +691,8 @@ const Checkout = () => {
                     <span className="text-gray-800">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping ({shippingDistance ? shippingDistance.toFixed(1) : 0} km)</span>
-                    <span className="text-gray-800">{formatPrice(shippingFee)}</span>
+                    <span className="text-gray-600">Shipping ({displayShippingDistance ? displayShippingDistance.toFixed(1) : 0} km)</span>
+                    <span className="text-gray-800">{formatPrice(displayShippingFee)}</span>
                   </div>
                   <div className="border-t border-gray-100 pt-3 mt-2">
                     <div className="flex justify-between font-bold text-lg">
@@ -544,7 +709,7 @@ const Checkout = () => {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         </div>
       </div>

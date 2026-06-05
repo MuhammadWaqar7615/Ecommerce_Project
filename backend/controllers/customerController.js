@@ -143,13 +143,13 @@ const addToCart = async (req, res) => {
       return errorResponse(res, 'Insufficient stock', 400);
     }
 
-    let cart = await Cart.findOne({ customerId: req.user._id });
+    let cart = await Cart.findOne({ customerId: req.user._id }).populate('items.productId');
     if (!cart) {
-      cart = await Cart.create({ customerId: req.user._id, items: [] });
+      cart = (await Cart.create({ customerId: req.user._id, items: [] })).populate('items.productId');
     }
 
     const existingItem = cart.items.find(
-      item => item.productId.toString() === productId
+      item => item.productId._id.toString() === productId
     );
 
     if (existingItem) {
@@ -164,6 +164,10 @@ const addToCart = async (req, res) => {
     }
 
     await cart.save();
+    if(!existingItem) {
+      await cart.populate('items.productId');
+    }
+    console.log('Cart after adding item:', cart); // Debugging line
     successResponse(res, { cart }, 'Item added to cart');
   } catch (error) {
     console.error('Add to cart error:', error);
@@ -176,10 +180,12 @@ const updateCartItem = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
 
-    const cart = await Cart.findOne({ customerId: req.user._id });
+    // populate return repoonse of updated cart with product details
+    const cart = await Cart.findOne({ customerId: req.user._id }).populate('items.productId');
+    // console.log('Cart found:', cart) // Debugging line
     if (!cart) return errorResponse(res, 'Cart not found', 404);
 
-    const item = cart.items.find(item => item.productId.toString() === productId);
+    const item = cart.items.find(item => item.productId._id.toString() === productId);
     if (!item) return errorResponse(res, 'Item not in cart', 404);
 
     item.quantity = quantity;
@@ -196,10 +202,10 @@ const removeFromCart = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    const cart = await Cart.findOne({ customerId: req.user._id });
+    const cart = await Cart.findOne({ customerId: req.user._id }).populate('items.productId');
     if (!cart) return errorResponse(res, 'Cart not found', 404);
 
-    cart.items = cart.items.filter(item => item.productId.toString() !== productId);
+    cart.items = cart.items.filter(item => item.productId?._id.toString() !== productId);
     await cart.save();
 
     successResponse(res, { cart }, 'Item removed');
@@ -211,20 +217,37 @@ const removeFromCart = async (req, res) => {
 // Create order
 const createOrder = async (req, res) => {
   try {
-    const { shippingAddress, shippingDistance = 5 } = req.body;
+    const { shippingAddress, shippingDistance = 5, items: bodyItems } = req.body;
 
-    const cart = await Cart.findOne({ customerId: req.user._id }).populate('items.productId');
-    if (!cart || cart.items.length === 0) {
-      return errorResponse(res, 'Cart is empty', 400);
+    let itemsToProcess = [];
+    let fromCart = false;
+
+    if (bodyItems && bodyItems.length > 0) {
+      itemsToProcess = bodyItems;
+    } else {
+      const cart = await Cart.findOne({ customerId: req.user._id }).populate('items.productId');
+      if (!cart || cart.items.length === 0) {
+        return errorResponse(res, 'No items provided for order', 400);
+      }
+      itemsToProcess = cart.items.map(item => ({
+        productId: item.productId._id || item.productId,
+        quantity: item.quantity,
+        shopId: item.shopId
+      }));
+      fromCart = true;
     }
 
     let subtotal = 0;
     const orderItems = [];
 
-    for (const item of cart.items) {
-      const product = item.productId;
+    for (const item of itemsToProcess) {
+      const product = await Product.findById(item.productId);
       if (!product || !product.isVisible) {
-        return errorResponse(res, `Product not available`, 400);
+        return errorResponse(res, `Product ${product?.name || 'Unknown'} is not available`, 400);
+      }
+
+      if (product.stock < item.quantity) {
+        return errorResponse(res, `Insufficient stock for ${product.name}`, 400);
       }
 
       subtotal += product.price * item.quantity;
@@ -258,12 +281,14 @@ const createOrder = async (req, res) => {
       paymentStatus: 'Pending',
     });
 
-    // Clear cart
-    cart.items = [];
-    await cart.save();
+    // Clear cart only if we used the cart to create the order
+    if (fromCart) {
+      await Cart.findOneAndUpdate({ customerId: req.user._id }, { items: [] });
+    }
 
     successResponse(res, { order }, 'Order created successfully', 201);
   } catch (error) {
+    console.error('Create order error:', error);
     errorResponse(res, error.message);
   }
 };

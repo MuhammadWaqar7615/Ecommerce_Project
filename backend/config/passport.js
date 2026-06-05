@@ -19,7 +19,6 @@ passport.use(
     async (email, password, done) => {
       try {
         // Find user by email or username; allow legacy local accounts with no provider field
-        console.log(email, password)
         // if email contains '@', search by email, otherwise search by username
         let user;
         if (email.includes('@')) {
@@ -43,7 +42,7 @@ passport.use(
         console.log('User found:', user) // Debugging line
         // Verify password
         const isPasswordValid = await user.comparePassword(password);
-        console.log(password, user.password, isPasswordValid)
+        // console.log(password, user.password, isPasswordValid)
         if (!isPasswordValid) {
           return done(null, false, { message: 'Invalid password' });
         }

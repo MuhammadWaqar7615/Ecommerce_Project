@@ -75,7 +75,7 @@ const ShopManagement = () => {
   };
 
   const handleChange = async (e) => {
-    if(e.target.name === 'location') {
+    if (e.target.name === 'location') {
       setFormData({ ...formData, location: { ...formData.location, address: e.target.value } });
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -121,10 +121,10 @@ const ShopManagement = () => {
     setShowDiscardAlert(false);
   };
 
-const handleSuggestionClick = (suggestion) => {
-  setFormData({ ...formData, location: { ...formData.location, address: suggestion.placeName, latitude: suggestion.latitude, longitude: suggestion.longitude, state: suggestion.context?.find(ctx => ctx.id.startsWith('region'))?.text || '' } });
-  setShowSuggestion(false);
-};
+  const handleSuggestionClick = (suggestion) => {
+    setFormData({ ...formData, location: { ...formData.location, address: suggestion.placeName, latitude: suggestion.latitude, longitude: suggestion.longitude, state: suggestion.context?.find(ctx => ctx.id.startsWith('region'))?.text || '' } });
+    setShowSuggestion(false);
+  };
 
   // Centered loader while loading
   if (loading) {
@@ -231,6 +231,7 @@ const handleSuggestionClick = (suggestion) => {
               <input
                 type="text"
                 name="location"
+                autoComplete="off"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                 value={formData.location?.address || ''}
                 onChange={handleChange}
@@ -240,16 +241,19 @@ const handleSuggestionClick = (suggestion) => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-2 p-3 bg-blue-100flex flex-col border border-blue-200 rounded-lg"
+                  className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-10"
                 >
-                        {suggestions.map(suggestion => (
-                          <div
-                            key={suggestion.id}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                          >
-                            {suggestion.placeName}
-                          </div>
-                        ))}
+                  <ul className="max-h-60 overflow-y-auto py-1 divide-y divide-gray-100">
+                    {suggestions.map((suggestion, idx) => (
+                      <li
+                        key={suggestion.id}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 cursor-pointer transition-colors duration-150"
+                      >
+                        {suggestion.placeName}
+                      </li>
+                    ))}
+                  </ul>
                 </motion.div>
               )}
             </motion.div>

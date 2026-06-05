@@ -79,24 +79,26 @@ const AboutSection = () => {
             className="relative"
           >
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-primary/10 via-transparent to-secondary/20 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-gray-100 bg-white p-4 shadow-xl">
+            <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 bg-white p-3 sm:p-4 shadow-xl">
               <img
                 src={aboutImage}
                 alt="Crafts & Delights marketplace"
-                className="h-[420px] w-full rounded-[1.5rem] object-cover"
+                className="h-[250px] sm:h-[350px] md:h-[420px] lg:h-[500px] w-full rounded-[1rem] sm:rounded-[1.5rem] object-cover"
               />
 
-              <div className="absolute bottom-6 left-6 max-w-xs rounded-2xl bg-white/95 p-4 shadow-lg backdrop-blur-sm">
-                <p className="text-sm font-semibold text-gray-800">Marketplace visibility</p>
-                <p className="mt-1 text-sm text-gray-500">
+              {/* Bottom left overlay – now truly compact with right gap */}
+              <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 w-64 sm:w-auto sm:max-w-[260px] md:max-w-xs rounded-xl sm:rounded-2xl bg-white/95 p-3 backdrop-blur-sm shadow-lg">
+                <p className="text-xs sm:text-sm font-semibold text-gray-800 break-words">Marketplace visibility</p>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed break-words">
                   Give customers confidence while giving vendors a polished storefront presence.
                 </p>
               </div>
 
-              <div className="absolute right-6 top-6 rounded-2xl bg-primary px-4 py-3 text-white shadow-lg">
-                <p className="text-xs uppercase tracking-[0.2em] text-white/70">Trusted platform</p>
-                <p className="mt-1 text-2xl font-bold">Secure</p>
-                <p className="text-sm text-white/90">shopping for all users</p>
+              {/* Top right overlay – unchanged */}
+              <div className="absolute right-3 top-3 sm:right-4 sm:top-4 md:right-6 md:top-6 rounded-xl sm:rounded-2xl bg-primary px-3 py-2 sm:px-4 sm:py-3 text-white shadow-lg">
+                <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70">Trusted platform</p>
+                <p className="mt-1 text-xl sm:text-2xl font-bold">Secure</p>
+                <p className="text-[11px] sm:text-sm text-white/90">shopping for all users</p>
               </div>
             </div>
           </motion.div>

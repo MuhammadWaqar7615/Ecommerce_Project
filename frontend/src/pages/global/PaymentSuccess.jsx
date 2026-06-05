@@ -74,10 +74,10 @@ const PaymentSuccess = () => {
             </button>
 
             <button
-              onClick={() => navigate('/customer/orders')}
+              onClick={() => navigate('/')}
               className="w-full border border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-3 rounded-lg transition"
             >
-              View All Orders
+              Go to Home
             </button>
           </div>
         )}

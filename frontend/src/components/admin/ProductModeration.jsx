@@ -248,7 +248,7 @@ const ProductModeration = () => {
 
   const handleToggleVisibility = async (product) => {
     const action = product.isVisible ? 'hide' : 'show';
-    
+
     try {
       await toggleProductVisibility(product._id);
       toast.success(`Product ${action}den successfully!`);
@@ -299,17 +299,17 @@ const ProductModeration = () => {
       variants={containerVariants}
       className="bg-white rounded-2xl shadow-sm"
     >
-      <ToastContainer 
-        position="top-right" 
-        autoClose={3000} 
-        hideProgressBar={false} 
-        newestOnTop 
-        closeOnClick 
-        rtl={false} 
-        pauseOnFocusLoss 
-        draggable 
-        pauseOnHover 
-        theme="light" 
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
       />
 
       {/* Header */}
@@ -322,15 +322,6 @@ const ProductModeration = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Stats Badge */}
-          <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg"
-          >
-            <Package size={16} className="text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">{filteredProducts.length} Products</span>
-          </motion.div>
 
           {/* Refresh Button */}
           <motion.button
@@ -338,17 +329,18 @@ const ProductModeration = () => {
             whileTap={{ scale: 0.95 }}
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition disabled:opacity-50"
+            className="flex items-center gap-1 p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition disabled:opacity-50"
             title="Refresh"
           >
             <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+            <span className='hidden md:inline-block'>Refresh</span>
           </motion.button>
 
           {/* View Toggle */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 0.01 }}
+              whileTap={{ scale: 0.01 }}
               onClick={() => setViewMode('table')}
               className={`p-2 rounded-md transition ${viewMode === 'table' ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}`}
               title="Table View"
@@ -406,7 +398,7 @@ const ProductModeration = () => {
             <Filter size={18} />
             Filters
             {hasActiveFilters && (
-              <motion.span 
+              <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="ml-1 w-5 h-5 bg-white text-primary rounded-full text-xs flex items-center justify-center"
@@ -653,18 +645,23 @@ const ProductModeration = () => {
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center">
                               <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => handleToggleVisibility(product)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${product.isVisible ? 'bg-green-500' : 'bg-gray-300'
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${product.isVisible ? 'bg-green-500' : 'bg-gray-300'
                                   }`}
                                 title={product.isVisible ? 'Click to hide' : 'Click to show'}
                               >
                                 <motion.span
                                   initial={false}
-                                  animate={{ x: product.isVisible ? 24 : 2 }}
-                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                  animate={{ x: product.isVisible ? 26 : 2 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 400,
+                                    damping: 40,
+                                    mass: 0.8
+                                  }}
+                                  className="inline-block h-4 w-4 rounded-full bg-white shadow-sm"
                                 />
                               </motion.button>
                             </div>
@@ -783,7 +780,7 @@ const ProductModeration = () => {
 
       {/* Pagination */}
       {filteredProducts.length > 0 && totalPages > 1 && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100"

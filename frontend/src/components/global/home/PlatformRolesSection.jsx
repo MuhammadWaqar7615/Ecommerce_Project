@@ -7,7 +7,7 @@ const roles = [
     icon: FaUser,
     title: 'Customer',
     description: 'Browse products, manage your cart, place orders, track purchases, and leave reviews.',
-    features: ['Product discovery', 'Shopping cart', 'Secure checkout', 'Order tracking', 'Reviews & ratings'],
+    features: ['Product discovery', 'Shopping cart', 'Secure checkout'],
   },
   {
     icon: FaStore,

@@ -147,7 +147,6 @@ const Cart = () => {
                               <ShoppingBag size={28} />
                             </div>
                           )}
-                          
                         </div>
 
                         {/* Details */}

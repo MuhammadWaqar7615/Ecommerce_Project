@@ -57,7 +57,7 @@ const Cart = () => {
   };
 
   const subtotal = calculateSubtotal();
-  const shippingFee = 200;
+  const shippingFee = 150;
   const total = subtotal + shippingFee;
 
   if (loading) {

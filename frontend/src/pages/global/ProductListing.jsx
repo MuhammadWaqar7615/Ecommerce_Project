@@ -22,7 +22,7 @@ const ProductListing = () => {
     maxPrice: searchParams.get('maxPrice') || '',
     search: searchParams.get('search') || '',
   });
-
+  console.log('Current filters:', filters);
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -37,8 +37,21 @@ const ProductListing = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
   };
 
+  // Sync filters state whenever searchParams change
+  useEffect(() => {
+    const category = searchParams.get('category') || '';
+    const minPrice = searchParams.get('minPrice') || '';
+    const maxPrice = searchParams.get('maxPrice') || '';
+    const search = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get('page'), 10) || 1;
+
+    setFilters({ category, minPrice, maxPrice, search });
+    setCurrentPage(page);
+  }, [searchParams]);
+
   useEffect(() => {
     fetchProducts();
+    console.log('Fetching products with filters:', filters, 'and page:', currentPage);
   }, [filters, currentPage]);
 
   useEffect(() => {
@@ -68,6 +81,7 @@ const ProductListing = () => {
       const query = {
         page: currentPage,
         limit: 12,
+        q: filters.search,
         ...filters,
       };
       Object.keys(query).forEach(key => !query[key] && delete query[key]);
@@ -246,8 +260,8 @@ const ProductListing = () => {
                               key={i}
                               onClick={() => setCurrentPage(pageNum)}
                               className={`w-10 h-10 rounded-lg text-sm font-medium transition ${currentPage === pageNum
-                                  ? 'bg-primary text-white shadow-sm'
-                                  : 'text-gray-600 hover:bg-gray-100'
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
                               {pageNum}

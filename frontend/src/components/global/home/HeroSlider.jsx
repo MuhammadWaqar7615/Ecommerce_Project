@@ -136,10 +136,10 @@ const HeroSlider = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3, ease: "easeOut" }}
-            className="max-w-3xl"
+            className="max-w-full sm:max-w-3xl"
           >
             <motion.h1
-              className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight break-words"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -147,7 +147,7 @@ const HeroSlider = () => {
               {slides[currentIndex].title}
             </motion.h1>
             <motion.p
-              className="text-xl md:text-2xl text-white/90 mb-8"
+              className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 max-w-full break-words"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
@@ -156,12 +156,12 @@ const HeroSlider = () => {
             </motion.p>
 
             <motion.div
-              className="flex gap-4"
+              className="flex flex-col gap-3 sm:flex-row sm:gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
             >
-              <button onClick={() => navigate('/products')} className="px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:scale-105 transition-transform duration-300">
+              <button onClick={() => navigate('/products')} className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:scale-105 transition-transform duration-300">
                 Shop Now
               </button>
               <button
@@ -171,7 +171,7 @@ const HeroSlider = () => {
                     collectionSection.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="px-8 py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-gray-900 transition-all duration-300"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-gray-900 transition-all duration-300"
               >
                 Explore Collections
               </button>

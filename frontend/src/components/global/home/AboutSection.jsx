@@ -87,7 +87,7 @@ const AboutSection = () => {
               />
 
               {/* Bottom left overlay – now truly compact with right gap */}
-              <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 w-64 sm:w-auto sm:max-w-[260px] md:max-w-xs rounded-xl sm:rounded-2xl bg-white/95 p-3 backdrop-blur-sm shadow-lg">
+              <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6 w-full max-w-[90%] sm:w-auto sm:max-w-[260px] md:max-w-xs rounded-xl sm:rounded-2xl bg-white/95 p-3 backdrop-blur-sm shadow-lg">
                 <p className="text-xs sm:text-sm font-semibold text-gray-800 break-words">Marketplace visibility</p>
                 <p className="mt-1 text-xs sm:text-sm text-gray-500 leading-relaxed break-words">
                   Give customers confidence while giving vendors a polished storefront presence.

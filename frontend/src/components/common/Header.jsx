@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaUser, FaBars, FaChevronDown, FaShoppingCart, FaSearch, FaTimes } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
-import AlertConfirmation from '../common/AlertConfirmation'; // adjust path as needed
+import AlertConfirmation from '../common/AlertConfirmation';
 
 const getRoleDisplay = (role) => {
   if (!role) return '';
@@ -51,17 +51,15 @@ const Header = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAuthModal, setShowAuthModal] = useState(false); // modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const isDashboard = variant === 'dashboard';
 
-  // Helper: check if user can access cart
   const canAccessCart = () => {
     return isAuthenticated && user?.role === 'customer';
   };
 
-  // Handle cart click (icon or mobile menu link)
   const handleCartClick = (e) => {
     if (e) e.preventDefault();
     if (canAccessCart()) {
@@ -71,7 +69,6 @@ const Header = ({
     }
   };
 
-  // After login, optionally redirect to cart (if desired)
   const handleLoginConfirm = () => {
     setShowAuthModal(false);
     navigate('/login', { state: { from: '/cart' } });
@@ -115,36 +112,46 @@ const Header = ({
   if (isDashboard) {
     return (
       <header ref={headerRef} className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
-        <div className="flex items-center justify-between px-4 md:px-6 py-1">
-          <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1 sm:px-4 md:px-6">
+          {/* Left section: hamburger + logo */}
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             <button
               onClick={onMenuClick}
-              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
             >
               <FaBars size={18} />
             </button>
-            <div className="flex items-center gap-2">
-              <Link to="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-white">
-                <img src="/logo.svg" alt="Logo" width={48} height={48} />
+            <Link to="/" className="flex items-center gap-1.5 sm:gap-2">
+              <img
+                src="/logo.svg"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 md:w-12 md:h-12"
+              />
+              <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white whitespace-nowrap">
                 Crafts & Delights
-              </Link>
-            </div>
+              </span>
+            </Link>
           </div>
 
+          {/* Right section: user dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1 sm:gap-2 md:gap-3 px-2 py-1.5 rounded-lg text-white hover:bg-white/10 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center">
                 <FaUser size={14} className="text-white" />
               </div>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">{getDisplayName(user)}</p>
-                <p className="text-xs opacity-80">{getRoleDisplay(user?.role)}</p>
+              <div className="hidden sm:block text-left">
+                <p className="text-xs sm:text-sm font-medium truncate max-w-[100px]">
+                  {getDisplayName(user)}
+                </p>
+                <p className="text-[11px] sm:text-xs opacity-80">{getRoleDisplay(user?.role)}</p>
               </div>
               <FaChevronDown
-                size={12}
+                size={10}
                 className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
               />
             </button>
@@ -152,8 +159,8 @@ const Header = ({
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50">
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                  <p className="text-sm font-semibold text-gray-800">{user?.fullName}</p>
-                  <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
+                  <p className="text-sm font-semibold text-gray-800 truncate">{user?.fullName}</p>
+                  <p className="text-xs text-gray-500 mt-1 truncate">{user?.email}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     <span className="font-medium text-primary">{getRoleDisplay(user?.role)}</span>
                   </p>
@@ -177,7 +184,6 @@ const Header = ({
           </div>
         </div>
 
-        {/* Modal for unauthenticated/non-customer users */}
         <AlertConfirmation
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
@@ -195,20 +201,30 @@ const Header = ({
   // Global pages variant
   return (
     <header className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
-      <div className="container max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between py-3">
-          <Link to="/" className="flex items-center gap-2 text-xl md:text-2xl font-bold text-white">
-            <img src="/logo.svg" alt="Logo" width={48} height={48} />
-            Crafts & Delights
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 py-2 sm:py-3">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <img
+              src="/logo.svg"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12"
+            />
+            <span className="text-sm sm:text-base md:text-xl lg:text-2xl font-bold text-white whitespace-nowrap">
+              Crafts & Delights
+            </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          {/* Right side icons + search + user */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {showSearch && (
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors md:hidden"
               >
-                {isSearchOpen ? <FaTimes size={16} /> : <FaSearch size={16} />}
+                {isSearchOpen ? <FaTimes size={14} /> : <FaSearch size={14} />}
               </button>
             )}
 
@@ -220,16 +236,13 @@ const Header = ({
                     placeholder="Search products..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    className="w-56 text-white ring-2 ring-gray-300 lg:w-64 px-4 py-1.5 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-secondary"
+                    className="w-48 lg:w-64 px-3 py-1.5 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 text-white bg-white/10 placeholder-white/70 border border-white/20"
                   />
                   <button
                     type="submit"
                     className="absolute right-2 top-1/2 transform -translate-y-1/2"
                   >
-                    <FaSearch
-                      size={14}
-                      className="text-gray-400 cursor-pointer group-focus-within:text-white"
-                    />
+                    <FaSearch size={14} className="text-white/70 group-focus-within:text-white" />
                   </button>
                 </form>
               </div>
@@ -238,11 +251,11 @@ const Header = ({
             {shouldShowCart && (
               <button
                 onClick={handleCartClick}
-                className="relative ml-2 p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+                className="relative p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
               >
                 <FaShoppingCart size={18} />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                     {itemCount}
                   </span>
                 )}
@@ -252,14 +265,16 @@ const Header = ({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-white hover:bg-white/10 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 py-1.5 rounded-lg text-white hover:bg-white/10 transition-colors"
               >
                 <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
                   <FaUser size={12} className="text-white" />
                 </div>
-                <div className="hidden lg:block text-left">
-                  <p className="text-sm font-medium">{getDisplayName(user)}</p>
-                  {user && <p className="text-xs opacity-80">{getRoleDisplay(user?.role)}</p>}
+                <div className="hidden sm:block text-left">
+                  <p className="text-xs sm:text-sm font-medium truncate max-w-[80px]">
+                    {getDisplayName(user) || 'Account'}
+                  </p>
+                  {user && <p className="text-[10px] sm:text-xs opacity-80">{getRoleDisplay(user?.role)}</p>}
                 </div>
                 <FaChevronDown
                   size={10}
@@ -272,8 +287,8 @@ const Header = ({
                   {user ? (
                     <>
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                        <p className="text-sm font-semibold text-gray-800">{user?.fullName}</p>
-                        <p className="text-xs text-gray-500 mt-1">{user?.email}</p>
+                        <p className="text-sm font-semibold text-gray-800 truncate">{user?.fullName}</p>
+                        <p className="text-xs text-gray-500 mt-1 truncate">{user?.email}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           <span className="font-medium text-primary">{getRoleDisplay(user?.role)}</span>
                         </p>
@@ -328,12 +343,13 @@ const Header = ({
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 aria-label="Toggle navigation menu"
               >
-                {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+                {isMenuOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
               </button>
             )}
           </div>
         </div>
 
+        {/* Mobile search bar */}
         {showSearch && isSearchOpen && (
           <div className="md:hidden pb-3">
             <form onSubmit={handleSearch} className="relative">
@@ -342,15 +358,16 @@ const Header = ({
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full px-4 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+                className="w-full px-4 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white/10 text-white placeholder-white/80 border border-white/20"
               />
               <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <FaSearch className="text-gray-400" />
+                <FaSearch className="text-white/80" />
               </button>
             </form>
           </div>
         )}
 
+        {/* Mobile menu links */}
         {showMobileMenu && isMenuOpen && (
           <div className="md:hidden pb-4 space-y-3">
             {shouldShowProductsLink && (
@@ -358,7 +375,6 @@ const Header = ({
                 Products
               </Link>
             )}
-
             {user ? (
               <>
                 <Link
@@ -398,7 +414,6 @@ const Header = ({
         )}
       </div>
 
-      {/* Modal for unauthenticated/non-customer users */}
       <AlertConfirmation
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}

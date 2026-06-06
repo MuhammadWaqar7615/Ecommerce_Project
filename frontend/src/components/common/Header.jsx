@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaUser, FaBars, FaChevronDown, FaShoppingCart, FaSearch, FaTimes } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
+import AlertConfirmation from '../common/AlertConfirmation'; // adjust path as needed
 
 const getRoleDisplay = (role) => {
   if (!role) return '';
@@ -44,15 +45,37 @@ const Header = ({
   showMobileMenu = false,
   logoutRedirectTo = null,
 }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const { itemCount } = useCart();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false); // modal state
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const isDashboard = variant === 'dashboard';
+
+  // Helper: check if user can access cart
+  const canAccessCart = () => {
+    return isAuthenticated && user?.role === 'customer';
+  };
+
+  // Handle cart click (icon or mobile menu link)
+  const handleCartClick = (e) => {
+    if (e) e.preventDefault();
+    if (canAccessCart()) {
+      navigate('/cart');
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  // After login, optionally redirect to cart (if desired)
+  const handleLoginConfirm = () => {
+    setShowAuthModal(false);
+    navigate('/login', { state: { from: '/cart' } });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -60,7 +83,6 @@ const Header = ({
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -89,7 +111,7 @@ const Header = ({
     ? 'fixed top-0 left-0 right-0'
     : `${position === 'sticky' ? 'sticky' : 'fixed'} top-0 left-0 right-0`;
 
-    // for dashboard variants
+  // Dashboard variant
   if (isDashboard) {
     return (
       <header ref={headerRef} className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
@@ -154,11 +176,23 @@ const Header = ({
             )}
           </div>
         </div>
+
+        {/* Modal for unauthenticated/non-customer users */}
+        <AlertConfirmation
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onConfirm={handleLoginConfirm}
+          title="Authentication Required"
+          message="Only customers can access the cart. Please log in as a customer to continue."
+          type="warning"
+          confirmText="Log In"
+          cancelText="Cancel"
+        />
       </header>
     );
   }
 
-  // For global pages
+  // Global pages variant
   return (
     <header className={`${headerPositionClass} bg-primary shadow-lg z-50`}>
       <div className="container max-w-7xl mx-auto px-4">
@@ -202,14 +236,17 @@ const Header = ({
             )}
 
             {shouldShowCart && (
-              <Link to="/cart" className="relative ml-2 p-2 rounded-lg text-white hover:bg-white/10 transition-colors">
+              <button
+                onClick={handleCartClick}
+                className="relative ml-2 p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              >
                 <FaShoppingCart size={18} />
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {itemCount}
                   </span>
                 )}
-              </Link>
+              </button>
             )}
 
             <div className="relative" ref={dropdownRef}>
@@ -332,9 +369,16 @@ const Header = ({
                   Dashboard
                 </Link>
                 {shouldShowCart && (
-                  <Link to="/cart" className="block text-white py-2" onClick={() => setIsMenuOpen(false)}>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleCartClick(e);
+                      setIsMenuOpen(false);
+                    }}
+                    className="block text-white py-2 w-full text-left"
+                  >
                     Cart ({itemCount})
-                  </Link>
+                  </button>
                 )}
                 <button onClick={handleLogout} className="block text-white py-2">
                   Logout
@@ -353,6 +397,18 @@ const Header = ({
           </div>
         )}
       </div>
+
+      {/* Modal for unauthenticated/non-customer users */}
+      <AlertConfirmation
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onConfirm={handleLoginConfirm}
+        title="Authentication Required"
+        message="Only customers can access the cart. Please log in as a customer to continue."
+        type="warning"
+        confirmText="Log In"
+        cancelText="Cancel"
+      />
     </header>
   );
 };

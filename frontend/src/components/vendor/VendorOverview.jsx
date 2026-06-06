@@ -176,14 +176,15 @@ const VendorOverview = () => {
           <p className="text-gray-600 max-w-md mx-auto mb-6">
             Create your shop to start listing products and receiving orders.
           </p>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => document.querySelector('[data-tab="shop"]')?.click()}
-            className="px-6 py-2 bg-primary text-white rounded-lg shadow-sm hover:bg-primary-dark transition"
-          >
-            Create Shop Now
-          </motion.button>
+          <Link to="/vendor/shop">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 py-2 bg-primary text-white rounded-lg shadow-sm hover:bg-primary-dark transition"
+            >
+              Create Shop Now
+            </motion.button>
+          </Link>
         </motion.div>
       </motion.div>
     );
@@ -270,8 +271,8 @@ const VendorOverview = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setTimeRange(range)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${timeRange === range
-                  ? 'bg-primary text-white shadow-md'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
               {range}

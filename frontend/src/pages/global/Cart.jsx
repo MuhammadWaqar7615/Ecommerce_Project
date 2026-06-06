@@ -67,7 +67,7 @@ const Cart = () => {
       </div>
     );
   }
-
+  console.log('Cart data:', cart); // Debugging line
   if (!cart?.items || cart.items.length === 0) {
     return (
       <div className="min-h-[calc(100vh-80px)] bg-gray-50/30 flex items-center justify-center px-4">
@@ -126,8 +126,8 @@ const Cart = () => {
                     const productId = product._id || item.productId || item._id;
                     const productName = product.name || 'Product';
                     const productImage = product.images?.[0] || null;
-                    const category = product.category?.name || product.category || 'Uncategorized';
-
+                    const category = product.category?.name || null
+                    
                     return (
                       <motion.div
                         key={productId}
@@ -150,12 +150,12 @@ const Cart = () => {
                         </div>
 
                         {/* Details */}
-                        <div className="flex-grow space-y-2">
+                        <div className="flex-grow justfiy-between space-y-2">
                           <Link to={`/products/${productId}`} className="font-semibold text-gray-800 hover:text-primary transition">
                             {productName}
                           </Link>
-                          <p className="text-sm text-gray-500">{category}</p>
-                          <div className="flex items-center gap-3">
+                          {category && <p className="text-sm text-gray-500">{category}</p>}
+                          <div className="flex mt-5 items-end gap-3">
                             <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                               <button
                                 onClick={() => updateQuantity(productId, item.quantity - 1)}
@@ -181,9 +181,19 @@ const Cart = () => {
                         </div>
 
                         {/* Price */}
-                        <div className="text-right sm:text-left">
+                        <div className="text-right sm:text-left flex flex-col items-center">
+                          <div className='flex sm:flex-col items-center gap-3 pb-2 sm:pb-1'>
                           <p className="font-bold text-gray-800">{formatPrice(item.priceAtAdd * item.quantity)}</p>
                           <p className="text-xs text-gray-400">{formatPrice(item.priceAtAdd)} each</p>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate(`/checkout?productId=${productId}&quantity=${item.quantity}&shopId=${item?.shopId}`)}
+                            className="w-full  px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition"
+                          >
+                            Buy Now
+                          </motion.button>
                         </div>
                       </motion.div>
                     );

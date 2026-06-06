@@ -68,6 +68,7 @@ const ProductListing = () => {
       const query = {
         page: currentPage,
         limit: 12,
+        q: filters.search,
         ...filters,
       };
       Object.keys(query).forEach(key => !query[key] && delete query[key]);

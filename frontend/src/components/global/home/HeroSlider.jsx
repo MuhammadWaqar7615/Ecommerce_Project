@@ -5,6 +5,7 @@ import img1 from '../../../assets/clothes-1.webp';
 import img2 from '../../../assets/delights-1.webp';
 import img3 from '../../../assets/shoes-1.webp';
 import img4 from '../../../assets/home-decors-1.webp';
+import { useNavigate } from 'react-router-dom';
 
 const slides = [
   { id: 1, image: img1, title: "Traditional Attire", subtitle: "Embrace Cultural Elegance" },
@@ -18,6 +19,7 @@ const HeroSlider = () => {
   const [direction, setDirection] = useState(0);
   const timerRef = useRef(null);
   const isAnimatingRef = useRef(false);
+  const navigate = useNavigate();
 
   const slideVariants = {
     enter: (direction) => ({
@@ -60,24 +62,24 @@ const HeroSlider = () => {
   const goToSlide = (clickedIndex) => {
     console.log('Clicked index:', clickedIndex); // Debug log
     console.log('Current index:', currentIndex); // Debug log
-    
+
     if (isAnimatingRef.current) {
       console.log('Animation in progress, ignoring click');
       return;
     }
-    
+
     if (clickedIndex === currentIndex) {
       console.log('Already on this slide, ignoring click');
       return;
     }
-    
+
     isAnimatingRef.current = true;
     // Set direction based on clicked index
     const newDirection = clickedIndex > currentIndex ? 1 : -1;
     setDirection(newDirection);
     setCurrentIndex(clickedIndex);
     console.log('Changing to slide:', clickedIndex);
-    
+
     setTimeout(() => {
       isAnimatingRef.current = false;
     }, 800);
@@ -152,17 +154,25 @@ const HeroSlider = () => {
             >
               {slides[currentIndex].subtitle}
             </motion.p>
-            
+
             <motion.div
               className="flex gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
             >
-              <button className="px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:scale-105 transition-transform duration-300">
+              <button onClick={() => navigate('/products')} className="px-8 py-3 bg-white text-gray-900 rounded-full font-semibold hover:scale-105 transition-transform duration-300">
                 Shop Now
               </button>
-              <button className="px-8 py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-gray-900 transition-all duration-300">
+              <button
+                onClick={() => {
+                  const collectionSection = document.getElementById('collection');
+                  if (collectionSection) {
+                    collectionSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="px-8 py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-white hover:text-gray-900 transition-all duration-300"
+              >
                 Explore Collections
               </button>
             </motion.div>
@@ -181,18 +191,18 @@ const HeroSlider = () => {
           >
             <div className={`
               rounded-full transition-all duration-300 ease-out
-              ${idx === currentIndex 
-                ? 'w-3 h-3 bg-white scale-100' 
+              ${idx === currentIndex
+                ? 'w-3 h-3 bg-white scale-100'
                 : 'w-2 h-2 bg-white/40 group-hover:bg-white/70 group-hover:scale-110'
               }
             `} />
-            
+
             <span className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/80 text-white text-xs px-2 py-1 rounded pointer-events-none whitespace-nowrap">
               {slide.title}
             </span>
           </button>
         ))}
-        
+
       </div>
     </div>
   );

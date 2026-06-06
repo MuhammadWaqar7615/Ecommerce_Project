@@ -56,7 +56,7 @@ const CategoriesSection = () => {
   }
 
   return (
-    <section className="section bg-gray-50/30">
+    <section className="section bg-gray-50/30" id="collection">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -116,7 +116,7 @@ const ProductListing = () => {
   const hasActiveFilters = filters.category || filters.minPrice || filters.maxPrice;
 
   return (
-    <main className="bg-gray-50/30 min-h-screen py-8 md:py-12 mt-10">
+    <main className="bg-gray-50/30 min-h-screen py-8 md:py-12 mt-16 md:mt-10">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Top Bar: Back + Filter Row */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">

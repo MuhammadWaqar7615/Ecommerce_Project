@@ -92,7 +92,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="bg-gray-50/30 min-h-screen py-8 md:py-12 mt-10">
+    <div className="bg-gray-50/30 min-h-screen py-8 md:py-12 mt-16 md:mt-10">
       <div className="container mx-auto px-4 max-w-7xl">
         {/* Back Button */}
         <div className="mb-6">

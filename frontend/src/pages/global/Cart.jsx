@@ -155,7 +155,7 @@ const Cart = () => {
                             {productName}
                           </Link>
                           {category && <p className="text-sm text-gray-500">{category}</p>}
-                          <div className="flex items-center gap-3">
+                          <div className="flex mt-5 items-end gap-3">
                             <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                               <button
                                 onClick={() => updateQuantity(productId, item.quantity - 1)}
@@ -181,14 +181,16 @@ const Cart = () => {
                         </div>
 
                         {/* Price */}
-                        <div className="text-right sm:text-left">
+                        <div className="text-right sm:text-left flex flex-col items-center">
+                          <div className='flex sm:flex-col items-center gap-3 pb-2 sm:pb-1'>
                           <p className="font-bold text-gray-800">{formatPrice(item.priceAtAdd * item.quantity)}</p>
                           <p className="text-xs text-gray-400">{formatPrice(item.priceAtAdd)} each</p>
+                          </div>
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => navigate(`/checkout?productId=${productId}&quantity=${item.quantity}&shopId=${item?.shopId}`)}
-                            className="w-full py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition"
+                            className="w-full  px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition"
                           >
                             Buy Now
                           </motion.button>

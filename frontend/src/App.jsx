@@ -100,17 +100,17 @@ function AppContent() {
     <>
       <InputDefaults />
       <Routes>
-        <Route element={<MainLayout />}>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<ProductListing />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<PasswordReset />} />
           <Route path="/auth-callback" element={<AuthCallback />} />
+        <Route element={<MainLayout />}>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductListing />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
 
           {/* Customer Routes */}
           <Route path="/cart" element={

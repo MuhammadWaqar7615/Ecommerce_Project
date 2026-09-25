@@ -52,13 +52,13 @@ export const login = async (identifier, password) => {
   }
 };
 
-// ==================== GOOGLE OAUTH ====================
-export const loginWithGoogle = () => {
-  // Redirect to the backend OAuth endpoint using the configured API base URL.
-  const apiBaseUrl = api.defaults.baseURL || 'http://localhost:5000/api';
-  const normalizedBaseUrl = apiBaseUrl.replace(/\/$/, '');
-  window.location.href = `${normalizedBaseUrl}/auth/google`;
-};
+// // ==================== GOOGLE OAUTH ====================
+// export const loginWithGoogle = () => {
+//   // Redirect to the backend OAuth endpoint using the configured API base URL.
+//   const apiBaseUrl = api.defaults.baseURL || 'http://localhost:5000/api';
+//   const normalizedBaseUrl = apiBaseUrl.replace(/\/$/, '');
+//   window.location.href = `${normalizedBaseUrl}/auth/google`;
+// };
 
 // Handle Google OAuth callback - call this after redirect
 export const handleGoogleCallback = (token, user) => {

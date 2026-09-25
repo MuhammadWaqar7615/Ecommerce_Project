@@ -64,63 +64,63 @@ passport.use(
 );
 
 // ==================== GOOGLE STRATEGY ====================
-// For Google OAuth authentication
-passport.use(
-  'google',
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL,
-      passReqToCallback: false,
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        // Check if user already exists with this Google ID
-        let user = await User.findOne({
-          providerId: profile.id,
-          provider: 'google',
-        });
+// // For Google OAuth authentication
+// passport.use(
+//   'google',
+//   new GoogleStrategy(
+//     {
+//       clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+//       callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL,
+//       passReqToCallback: false,
+//     },
+//     async (accessToken, refreshToken, profile, done) => {
+//       try {
+//         // Check if user already exists with this Google ID
+//         let user = await User.findOne({
+//           providerId: profile.id,
+//           provider: 'google',
+//         });
 
-        if (user) {
-          return done(null, user);
-        }
+//         if (user) {
+//           return done(null, user);
+//         }
 
-        // Check if user exists with this email (manual registration)
-        let existingUser = await User.findOne({ email: profile.emails[0].value });
+//         // Check if user exists with this email (manual registration)
+//         let existingUser = await User.findOne({ email: profile.emails[0].value });
 
-        if (existingUser) {
-          // Link Google to existing account
-          existingUser.providerId = profile.id;
-          existingUser.provider = 'google';
-          existingUser.isEmailVerified = true;
-          if (!existingUser.fullName) {
-            existingUser.fullName = profile.displayName;
-          }
-          await existingUser.save();
-          return done(null, existingUser);
-        }
+//         if (existingUser) {
+//           // Link Google to existing account
+//           existingUser.providerId = profile.id;
+//           existingUser.provider = 'google';
+//           existingUser.isEmailVerified = true;
+//           if (!existingUser.fullName) {
+//             existingUser.fullName = profile.displayName;
+//           }
+//           await existingUser.save();
+//           return done(null, existingUser);
+//         }
 
-        // Create new user from Google profile
-        const newUser = new User({
-          email: profile.emails[0].value,
-          fullName: profile.displayName,
-          provider: 'google',
-          providerId: profile.id,
-          isEmailVerified: true,
-          username: profile.emails[0].value.split('@')[0] + '_' + Date.now(),
-          phone: '',
-          password: null,
-        });
+//         // Create new user from Google profile
+//         const newUser = new User({
+//           email: profile.emails[0].value,
+//           fullName: profile.displayName,
+//           provider: 'google',
+//           providerId: profile.id,
+//           isEmailVerified: true,
+//           username: profile.emails[0].value.split('@')[0] + '_' + Date.now(),
+//           phone: '',
+//           password: null,
+//         });
 
-        await newUser.save();
-        return done(null, newUser);
-      } catch (error) {
-        return done(error);
-      }
-    }
-  )
-);
+//         await newUser.save();
+//         return done(null, newUser);
+//       } catch (error) {
+//         return done(error);
+//       }
+//     }
+//   )
+// );
 
 // ==================== JWT STRATEGY ====================
 // For verifying JWT tokens in API requests
